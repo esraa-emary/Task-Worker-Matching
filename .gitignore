@@ -1,0 +1,9 @@
+build/
+*.user
+*.o
+*.obj
+*.log
+*.pro.user
+*.autosave
+*.qmake.stash
+Makefile*
