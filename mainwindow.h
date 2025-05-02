@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <login.h>
+#include <signup.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,7 +22,13 @@ public:
 private slots:
     void on_exit_clicked();
 
+    void on_login_clicked();
+
+    void on_signup_clicked();
+
 private:
     Ui::MainWindow *ui;
+    SignUp signup;
+    LogIn login;
 };
 #endif // MAINWINDOW_H

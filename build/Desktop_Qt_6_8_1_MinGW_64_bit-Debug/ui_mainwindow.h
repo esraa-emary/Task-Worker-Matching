@@ -29,15 +29,16 @@ public:
     QGridLayout *gridLayout_4;
     QFrame *frame_2;
     QGridLayout *gridLayout_3;
-    QPushButton *pushButton_2;
+    QFrame *frame_4;
+    QGridLayout *gridLayout_5;
+    QPushButton *signup;
+    QPushButton *login;
+    QFrame *frame_5;
+    QGridLayout *gridLayout_6;
     QPushButton *exit;
-    QPushButton *pushButton_5;
-    QPushButton *pushButton_3;
-    QPushButton *pushButton;
     QFrame *frame;
     QGridLayout *gridLayout_2;
     QLabel *label_3;
-    QLabel *label;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -47,10 +48,10 @@ public:
         MainWindow->setStyleSheet(QString::fromUtf8("QMainWindow{\n"
 "	color: #000;\n"
 "	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, \n"
-"	stop:0 #a3b18a, \n"
-"	stop:0.2 #588157,\n"
-"	stop:0.7 #588157,\n"
-"	stop:1 #a3b18a\n"
+"	stop:0 #778da9, \n"
+"	stop:0.2 #355070,\n"
+"	stop:0.7 #355070,\n"
+"	stop:1 #778da9\n"
 "	);\n"
 "}\n"
 "\n"
@@ -61,24 +62,25 @@ public:
         gridLayout->setObjectName("gridLayout");
         frame_3 = new QFrame(centralwidget);
         frame_3->setObjectName("frame_3");
+        frame_3->setMaximumSize(QSize(16777215, 600));
         frame_3->setFrameShape(QFrame::Shape::StyledPanel);
         frame_3->setFrameShadow(QFrame::Shadow::Raised);
         gridLayout_4 = new QGridLayout(frame_3);
         gridLayout_4->setObjectName("gridLayout_4");
-        gridLayout_4->setContentsMargins(9, -1, -1, 9);
         frame_2 = new QFrame(frame_3);
         frame_2->setObjectName("frame_2");
+        frame_2->setMaximumSize(QSize(1500, 400));
         frame_2->setStyleSheet(QString::fromUtf8("QPushButton{\n"
 "	border: 1px solid #000;\n"
 "width: 80%;\n"
 "    height: 20px;\n"
-"    background-color: #a3b18a;\n"
+"    background-color: #778da9;\n"
 "border-radius: 15px;\n"
 "\n"
 "}\n"
 "\n"
 "QPushButton:hover{\n"
-"    background-color: #3a5a40;\n"
+"    background-color: #0d1b2a;\n"
 "transition: all 0.3s ease-in-out;\n"
 "	color:#fff;\n"
 "}"));
@@ -87,86 +89,79 @@ public:
         gridLayout_3 = new QGridLayout(frame_2);
         gridLayout_3->setSpacing(0);
         gridLayout_3->setObjectName("gridLayout_3");
-        gridLayout_3->setContentsMargins(-1, 200, -1, 200);
-        pushButton_2 = new QPushButton(frame_2);
-        pushButton_2->setObjectName("pushButton_2");
-        pushButton_2->setMaximumSize(QSize(800, 80));
+        gridLayout_3->setContentsMargins(-1, 100, -1, 100);
+        frame_4 = new QFrame(frame_2);
+        frame_4->setObjectName("frame_4");
+        frame_4->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_4->setFrameShadow(QFrame::Shadow::Raised);
+        gridLayout_5 = new QGridLayout(frame_4);
+        gridLayout_5->setObjectName("gridLayout_5");
+        signup = new QPushButton(frame_4);
+        signup->setObjectName("signup");
+        signup->setMaximumSize(QSize(700, 80));
         QFont font;
         font.setPointSize(17);
-        pushButton_2->setFont(font);
-        pushButton_2->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
+        signup->setFont(font);
+        signup->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
 
-        gridLayout_3->addWidget(pushButton_2, 3, 0, 1, 1);
+        gridLayout_5->addWidget(signup, 0, 1, 1, 1);
 
-        exit = new QPushButton(frame_2);
+        login = new QPushButton(frame_4);
+        login->setObjectName("login");
+        login->setMaximumSize(QSize(700, 80));
+        login->setFont(font);
+        login->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
+
+        gridLayout_5->addWidget(login, 0, 0, 1, 1);
+
+
+        gridLayout_3->addWidget(frame_4, 0, 0, 1, 2);
+
+        frame_5 = new QFrame(frame_2);
+        frame_5->setObjectName("frame_5");
+        frame_5->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_5->setFrameShadow(QFrame::Shadow::Raised);
+        gridLayout_6 = new QGridLayout(frame_5);
+        gridLayout_6->setObjectName("gridLayout_6");
+        exit = new QPushButton(frame_5);
         exit->setObjectName("exit");
-        exit->setMaximumSize(QSize(800, 80));
+        exit->setMaximumSize(QSize(700, 80));
         exit->setFont(font);
         exit->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
 
-        gridLayout_3->addWidget(exit, 5, 0, 1, 1);
-
-        pushButton_5 = new QPushButton(frame_2);
-        pushButton_5->setObjectName("pushButton_5");
-        pushButton_5->setMaximumSize(QSize(800, 80));
-        pushButton_5->setFont(font);
-        pushButton_5->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-
-        gridLayout_3->addWidget(pushButton_5, 2, 0, 1, 1);
-
-        pushButton_3 = new QPushButton(frame_2);
-        pushButton_3->setObjectName("pushButton_3");
-        pushButton_3->setMaximumSize(QSize(800, 80));
-        pushButton_3->setFont(font);
-        pushButton_3->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-
-        gridLayout_3->addWidget(pushButton_3, 4, 0, 1, 1);
-
-        pushButton = new QPushButton(frame_2);
-        pushButton->setObjectName("pushButton");
-        pushButton->setEnabled(true);
-        pushButton->setMinimumSize(QSize(0, 20));
-        pushButton->setMaximumSize(QSize(800, 80));
-        pushButton->setFont(font);
-        pushButton->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-        pushButton->setStyleSheet(QString::fromUtf8(""));
-
-        gridLayout_3->addWidget(pushButton, 1, 0, 1, 1);
+        gridLayout_6->addWidget(exit, 0, 0, 1, 1);
 
 
-        gridLayout_4->addWidget(frame_2, 1, 1, 1, 1);
+        gridLayout_3->addWidget(frame_5, 1, 0, 1, 2);
+
+
+        gridLayout_4->addWidget(frame_2, 2, 0, 1, 1);
 
         frame = new QFrame(frame_3);
         frame->setObjectName("frame");
-        frame->setMaximumSize(QSize(16777215, 16777215));
+        frame->setMaximumSize(QSize(16777215, 200));
         frame->setStyleSheet(QString::fromUtf8(""));
         frame->setFrameShape(QFrame::Shape::StyledPanel);
         frame->setFrameShadow(QFrame::Shadow::Raised);
         gridLayout_2 = new QGridLayout(frame);
         gridLayout_2->setObjectName("gridLayout_2");
-        gridLayout_2->setContentsMargins(-1, 350, -1, 356);
+        gridLayout_2->setContentsMargins(-1, 100, -1, 9);
         label_3 = new QLabel(frame);
         label_3->setObjectName("label_3");
         QFont font1;
-        font1.setPointSize(40);
+        font1.setPointSize(50);
         font1.setBold(true);
         label_3->setFont(font1);
+        label_3->setStyleSheet(QString::fromUtf8("color:#fff;"));
         label_3->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
         gridLayout_2->addWidget(label_3, 0, 0, 1, 1);
-
-        label = new QLabel(frame);
-        label->setObjectName("label");
-        label->setFont(font1);
-        label->setAlignment(Qt::AlignmentFlag::AlignCenter);
-
-        gridLayout_2->addWidget(label, 1, 0, 1, 1);
 
 
         gridLayout_4->addWidget(frame, 1, 0, 1, 1);
 
 
-        gridLayout->addWidget(frame_3, 0, 1, 1, 1);
+        gridLayout->addWidget(frame_3, 0, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralwidget);
 
@@ -178,13 +173,10 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
-        pushButton_2->setText(QCoreApplication::translate("MainWindow", "PushButton", nullptr));
+        signup->setText(QCoreApplication::translate("MainWindow", "Sign-Up", nullptr));
+        login->setText(QCoreApplication::translate("MainWindow", "Log-In", nullptr));
         exit->setText(QCoreApplication::translate("MainWindow", "Exit", nullptr));
-        pushButton_5->setText(QCoreApplication::translate("MainWindow", "PushButton", nullptr));
-        pushButton_3->setText(QCoreApplication::translate("MainWindow", "PushButton", nullptr));
-        pushButton->setText(QCoreApplication::translate("MainWindow", "PushButton", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "Task-Worker Matching", nullptr));
-        label->setText(QCoreApplication::translate("MainWindow", "TextLabel", nullptr));
     } // retranslateUi
 
 };

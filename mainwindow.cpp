@@ -18,3 +18,17 @@ void MainWindow::on_exit_clicked()
     this->deleteLater();
 }
 
+
+void MainWindow::on_login_clicked()
+{
+    this->login.showFullScreen();
+    this->hide();
+}
+
+
+void MainWindow::on_signup_clicked()
+{
+    this->signup.showFullScreen();
+    this->hide();
+}
+
