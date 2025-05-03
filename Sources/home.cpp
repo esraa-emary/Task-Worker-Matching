@@ -22,19 +22,19 @@ Home::~Home()
 void Home::on_offeredTasks_clicked()
 {
     offeredTasks = new OfferedTasks(this);
-    offeredTasks->showFullScreen();
+    offeredTasks->show();
 }
 
 void Home::on_profile_clicked()
 {
     profile = new Profile(this);
-    profile->showFullScreen();
+    profile->show();
 }
 
 void Home::on_request_clicked()
 {
     requestTask = new RequestTask(this);
-    requestTask->showFullScreen();
+    requestTask->show();
 }
 
 void Home::on_logout_clicked()

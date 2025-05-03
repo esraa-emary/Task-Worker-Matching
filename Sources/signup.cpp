@@ -24,6 +24,6 @@ void SignUp::on_back_clicked()
 void SignUp::on_submit_clicked()
 {
     home = new Home(this);
-    home->showFullScreen();
+    home->show();
 }
 

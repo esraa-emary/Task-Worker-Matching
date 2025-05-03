@@ -27,12 +27,12 @@ void MainWindow::on_exit_clicked()
 void MainWindow::on_login_clicked()
 {
     login = new LogIn(this);
-    login->showFullScreen();
+    login->show();
 }
 
 void MainWindow::on_signup_clicked()
 {
     signup = new SignUp(this);
-    signup->showFullScreen();
+    signup->show();
 }
 

@@ -24,6 +24,6 @@ void LogIn::on_back_clicked()
 void LogIn::on_submit_clicked()
 {
     home = new Home(this);
-    home->showFullScreen();
+    home->show();
 }
 
