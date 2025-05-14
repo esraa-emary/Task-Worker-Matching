@@ -14,17 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QMainWindow{
-	color: #000;
-	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-	stop:0 #778da9, 
-	stop:0.3 #3076E3,
-	stop:0.7 #3076E3,
-	stop:1 #778da9
-	);
-}
-
-</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -43,6 +33,52 @@
        <enum>QFrame::Shadow::Raised</enum>
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
+       <item row="1" column="0">
+        <widget class="QFrame" name="frame">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>110</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <property name="bottomMargin">
+           <number>9</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="font">
+             <font>
+              <pointsize>50</pointsize>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color:#FDEEDC;</string>
+            </property>
+            <property name="text">
+             <string>Task-Worker Matching</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="2" column="0">
         <widget class="QFrame" name="frame_2">
          <property name="maximumSize">
@@ -53,18 +89,18 @@
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
-	border: 1px solid #000;
-width: 80%;
+	border: 1px solid #FFD8A9;
     height: 20px;
-    background-color: #778da9;
-border-radius: 15px;
-
+    background-color: #FFD8A9;
+border-radius: 30px;
+color:#E38B29;
 }
 
 QPushButton:hover{
-    background-color: #0d1b2a;
+    background-color: #9c6644;
+border: 1px solid #9c6644;
+	color:#FFD8A9;
 transition: all 0.3s ease-in-out;
-	color:#fff;
 }</string>
          </property>
          <property name="frameShape">
@@ -75,10 +111,10 @@ transition: all 0.3s ease-in-out;
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
           <property name="topMargin">
-           <number>100</number>
+           <number>9</number>
           </property>
           <property name="bottomMargin">
-           <number>100</number>
+           <number>9</number>
           </property>
           <property name="spacing">
            <number>0</number>
@@ -93,32 +129,11 @@ transition: all 0.3s ease-in-out;
             </property>
             <layout class="QGridLayout" name="gridLayout_5">
              <item row="0" column="0">
-              <widget class="QPushButton" name="offeredTasks">
-               <property name="maximumSize">
-                <size>
-                 <width>700</width>
-                 <height>80</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>17</pointsize>
-                </font>
-               </property>
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>Offered Tasks</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
               <widget class="QPushButton" name="request">
                <property name="maximumSize">
                 <size>
-                 <width>700</width>
-                 <height>80</height>
+                 <width>410</width>
+                 <height>75</height>
                 </size>
                </property>
                <property name="font">
@@ -134,12 +149,12 @@ transition: all 0.3s ease-in-out;
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <widget class="QPushButton" name="profile">
                <property name="maximumSize">
                 <size>
-                 <width>700</width>
-                 <height>80</height>
+                 <width>410</width>
+                 <height>75</height>
                 </size>
                </property>
                <property name="font">
@@ -152,12 +167,33 @@ transition: all 0.3s ease-in-out;
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="1" column="0">
+              <widget class="QPushButton" name="offeredTasks">
+               <property name="maximumSize">
+                <size>
+                 <width>410</width>
+                 <height>75</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>17</pointsize>
+                </font>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>Offered Tasks</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
               <widget class="QPushButton" name="logout">
                <property name="maximumSize">
                 <size>
-                 <width>700</width>
-                 <height>80</height>
+                 <width>410</width>
+                 <height>75</height>
                 </size>
                </property>
                <property name="font">
@@ -166,57 +202,11 @@ transition: all 0.3s ease-in-out;
                 </font>
                </property>
                <property name="text">
-                <string>Log-Out</string>
+                <string>Logout</string>
                </property>
               </widget>
              </item>
             </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QFrame" name="frame">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>200</height>
-          </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <property name="topMargin">
-           <number>100</number>
-          </property>
-          <property name="bottomMargin">
-           <number>9</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_3">
-            <property name="font">
-             <font>
-              <pointsize>50</pointsize>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color:#fff;</string>
-            </property>
-            <property name="text">
-             <string>Task-Worker Matching</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
            </widget>
           </item>
          </layout>

@@ -19,11 +19,6 @@ MainWindow::~MainWindow()
     delete signup;
 }
 
-void MainWindow::on_exit_clicked()
-{
-    this->close();
-}
-
 void MainWindow::on_login_clicked()
 {
     login = new LogIn(this);
@@ -35,4 +30,3 @@ void MainWindow::on_signup_clicked()
     signup = new SignUp(this);
     signup->show();
 }
-

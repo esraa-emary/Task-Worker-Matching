@@ -14,17 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QMainWindow{
-	color: #000;
-	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-	stop:0 #778da9, 
-	stop:0.3 #3076E3,
-	stop:0.7 #3076E3,
-	stop:1 #778da9
-	);
-}
-
-</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -49,18 +39,18 @@
       </property>
       <property name="styleSheet">
        <string notr="true">QPushButton{
-	border: 1px solid #000;
-width: 80%;
+	border: 1px solid #FFD8A9;
     height: 20px;
-    background-color: #778da9;
-border-radius: 15px;
-
+    background-color: #FFD8A9;
+border-radius: 30px;
+color:#E38B29;
 }
 
 QPushButton:hover{
-    background-color: #0d1b2a;
+    background-color: #9c6644;
+border: 1px solid #9c6644;
+	color:#FFD8A9;
 transition: all 0.3s ease-in-out;
-	color:#fff;
 }</string>
       </property>
       <property name="frameShape">
@@ -77,8 +67,8 @@ transition: all 0.3s ease-in-out;
         <widget class="QPushButton" name="back">
          <property name="maximumSize">
           <size>
-           <width>200</width>
-           <height>70</height>
+           <width>410</width>
+           <height>75</height>
           </size>
          </property>
          <property name="font">

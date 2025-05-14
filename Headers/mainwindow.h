@@ -20,8 +20,6 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_exit_clicked();
-
     void on_login_clicked();
 
     void on_signup_clicked();
