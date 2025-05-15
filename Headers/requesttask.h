@@ -7,7 +7,7 @@ namespace Ui {
 class RequestTask;
 }
 
-class RequestTask : public QMainWindow
+class RequestTask : public QWidget
 {
     Q_OBJECT
 

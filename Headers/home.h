@@ -30,6 +30,8 @@ private slots:
 
     void on_logout_clicked();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::Home *ui;
     Profile *profile;

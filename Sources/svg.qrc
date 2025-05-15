@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/new/svgs">
+        <file>Group.svg</file>
+    </qresource>
+</RCC>

@@ -2,10 +2,10 @@
 #include "ui_requesttask.h"
 
 RequestTask::RequestTask(QWidget *parent)
-    : QMainWindow(parent)
+    : QWidget(parent)
     , ui(new Ui::RequestTask)
 {
-    ui->setupUi(this);
+
 }
 
 RequestTask::~RequestTask()

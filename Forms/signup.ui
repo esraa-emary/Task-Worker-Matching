@@ -17,6 +17,24 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">#centralwidget {
+    background: qradialgradient(
+        cx: 0.5, cy: 0.5,
+        fx: 0.5, fy: 0.5,
+        radius: 0.5,
+        stop: 0.2981 rgba(241, 166, 97, 255),
+        stop: 1 rgba(227, 139, 41, 255)
+    );
+}
+QFrame {
+    background: transparent;
+    border: none;
+}
+QLineEdit{
+	color: rgb(0, 0, 0,0.6);
+}</string>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="1" column="0">
      <widget class="QFrame" name="frame_5">
