@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "../Headers/login.h"
 #include "../Headers/signup.h"
+#include "hoverbutton.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

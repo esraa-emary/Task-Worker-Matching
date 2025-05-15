@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     Sources/home.cpp \
     Sources/login.cpp \
+    hoverbutton.cpp \
     main.cpp \
     Sources/mainwindow.cpp \
     Sources/offeredtasks.cpp \
@@ -25,7 +26,8 @@ HEADERS += \
     Headers/offeredtasks.h \
     Headers/profile.h \
     Headers/requesttask.h \
-    Headers/signup.h
+    Headers/signup.h \
+    hoverbutton.h
 
 FORMS += \
     Forms/home.ui \
