@@ -15,8 +15,6 @@ SOURCES += \
     hoverbutton.cpp \
     main.cpp \
     Sources/mainwindow.cpp \
-    Sources/offeredtasks.cpp \
-    Sources/profile.cpp \
     Sources/requesttask.cpp \
     Sources/signup.cpp
 
@@ -24,8 +22,6 @@ HEADERS += \
     Headers/home.h \
     Headers/login.h \
     Headers/mainwindow.h \
-    Headers/offeredtasks.h \
-    Headers/profile.h \
     Headers/requesttask.h \
     Headers/signup.h \
     hoverbutton.h
@@ -34,8 +30,6 @@ FORMS += \
     Forms/home.ui \
     Forms/login.ui \
     Forms/mainwindow.ui \
-    Forms/offeredtasks.ui \
-    Forms/profile.ui \
     Forms/requesttask.ui \
     Forms/signup.ui
 
