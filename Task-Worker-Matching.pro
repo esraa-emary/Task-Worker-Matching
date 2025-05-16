@@ -1,6 +1,4 @@
-QT       += core gui
-QT += svgwidgets
-QT += sql
+QT       += core gui svgwidgets sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
@@ -15,8 +13,6 @@ SOURCES += \
     hoverbutton.cpp \
     main.cpp \
     Sources/mainwindow.cpp \
-    Sources/offeredtasks.cpp \
-    Sources/profile.cpp \
     Sources/requesttask.cpp \
     Sources/signup.cpp
 
@@ -24,8 +20,6 @@ HEADERS += \
     Headers/home.h \
     Headers/login.h \
     Headers/mainwindow.h \
-    Headers/offeredtasks.h \
-    Headers/profile.h \
     Headers/requesttask.h \
     Headers/signup.h \
     hoverbutton.h
@@ -34,15 +28,18 @@ FORMS += \
     Forms/home.ui \
     Forms/login.ui \
     Forms/mainwindow.ui \
-    Forms/offeredtasks.ui \
-    Forms/profile.ui \
     Forms/requesttask.ui \
     Forms/signup.ui
 
+INCLUDEPATH += \
+    Headers \
+    Sources \
+    Forms
+
+RESOURCES += \
+    Sources/svg.qrc
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RESOURCES += \
-    Sources/svg.qrc

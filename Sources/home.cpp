@@ -2,6 +2,7 @@
 #include "ui_home.h"
 #include <QSvgWidget>
 #include <QVBoxLayout>
+#include "ui_requesttask.h"
 #include <QDebug>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -12,6 +13,7 @@
 #include <QTimeZone>
 #include <QScrollArea>
 #include <QGraphicsDropShadowEffect>
+
 
 bool Home::connectToDatabase()
 {
@@ -41,44 +43,11 @@ bool Home::connectToDatabase()
     return true;
 }
 
-QString Home::getWorkersForRequest(int requestId) {
-    QString workers;
-    QSqlQuery query;
-    query.prepare("SELECT w.NAME "
-                  "FROM ASSIGNMENT a "
-                  "JOIN WORKER w ON a.WORKERID = w.WORKERID "
-                  "WHERE a.REQUESTID = :id");
-    query.bindValue(":id", requestId);
 
-    if (query.exec()) {
-        QStringList workerNames;
-        while (query.next()) {
-            workerNames << query.value("NAME").toString();
-        }
-        workers = workerNames.join(", ");
-    } else {
-        qDebug() << "Error fetching workers:" << query.lastError().text();
-    }
-    return workers.isEmpty() ? "No workers assigned" : workers;
-}
-
-QString Home::getAddressForRequest(int requestId) {
-    QString address;
-    QSqlQuery query;
-    query.prepare("SELECT ADDRESS FROM REQUEST WHERE REQUESTID = :id");
-    query.bindValue(":id", requestId);
-
-    if (query.exec() && query.next()) {
-        address = query.value("ADDRESS").toString();
-    } else {
-        qDebug() << "Error fetching address:" << query.lastError().text();
-        address = "Address not found";
-    }
-    return address;
-}
 
 void Home::loadAllRequests()
 {
+    // Clear existing content in ui->frame_7
     QLayout *existingLayout = ui->Requests->layout();
     if (existingLayout) {
         QLayoutItem *item;
@@ -91,6 +60,7 @@ void Home::loadAllRequests()
         delete existingLayout;
     }
 
+    // Clear any remaining child widgets
     for (QWidget *child : ui->Requests->findChildren<QWidget*>()) {
         child->deleteLater();
     }
@@ -108,12 +78,12 @@ void Home::loadAllRequests()
         "   border: none;"
         "}"
         "QScrollBar:vertical {"
-        "   background: #FFD8A9;"
+        "   background: #FFD8A9;" // Light orange
         "   width: 8px;"
         "   margin: 0px;"
         "}"
         "QScrollBar::handle:vertical {"
-        "   background: #E38B29;"
+        "   background: #E38B29;" // Dark orange
         "   border-radius: 4px;"
         "}"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
@@ -133,7 +103,7 @@ void Home::loadAllRequests()
         "}"
         );
     QVBoxLayout *cardsLayout = new QVBoxLayout(scrollContent);
-    cardsLayout->setSpacing(8);
+    cardsLayout->setSpacing(8); // Compact spacing
 
     QSqlQuery query;
     query.prepare(
@@ -195,31 +165,36 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
     card->setFrameShape(QFrame::StyledPanel);
     card->setStyleSheet(
         QString("#%1 {"
-                "   background-color: #FDEEDC;"
+                "   background-color: #FDEEDC;" // Light peach
                 "   border-radius: 20px;"
-                "   border: 2px solid #E38B29;"
+                "   border: 2px solid #E38B29;" // Border
                 "}")
             .arg(card->objectName())
         );
 
+    // Add shadow effect
     QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(card);
     shadowEffect->setBlurRadius(15);
     shadowEffect->setColor(QColor(0, 0, 0, 30));
     shadowEffect->setOffset(0, 2);
     card->setGraphicsEffect(shadowEffect);
 
+    // Main layout for card content
     QVBoxLayout *cardLayout = new QVBoxLayout(card);
-    cardLayout->setContentsMargins(8, 8, 8, 8);
-    cardLayout->setSpacing(2);
+    cardLayout->setContentsMargins(8, 8, 8, 8); // Minimized margins
+    cardLayout->setSpacing(2); // Tighter spacing
 
+    // Create the main horizontal layout
     QHBoxLayout *mainLayout = new QHBoxLayout();
     mainLayout->setSpacing(3);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
+    // Create the nested horizontal layout for title and date
     QHBoxLayout *titleDateLayout = new QHBoxLayout();
-    titleDateLayout->setSpacing(0);
+    titleDateLayout->setSpacing(0); // No spacing between title and date
     titleDateLayout->setContentsMargins(0, 0, 0, 0);
 
+    // Title label
     QLabel *titleLabel = new QLabel(taskName);
     titleLabel->setStyleSheet(
         "font-weight: bold;"
@@ -243,11 +218,13 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
         "padding-left: 2px;"
         "margin: 0px;"
         );
-    dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter); // Changed to AlignLeft
 
-    titleDateLayout->addWidget(titleLabel);
+    // Add title and date to the nested layout
+    titleDateLayout->addWidget(titleLabel); // No stretch to keep them adjacent
     titleDateLayout->addWidget(dateLabel);
 
+    // Address label
     QString address = getAddressForRequest(requestId);
     QLabel *addressLabel = new QLabel();
     if (address.length() > 20) {
@@ -264,31 +241,34 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
         );
     addressLabel->setAlignment(Qt::AlignRight);
 
-    mainLayout->addLayout(titleDateLayout, 4);
-    mainLayout->addStretch(1);
-    mainLayout->addWidget(addressLabel, 3);
+    // Add to the main layout
+    mainLayout->addLayout(titleDateLayout, 4); // Title and date layout gets more space
+    mainLayout->addStretch(1);                // Small flexible space
+    mainLayout->addWidget(addressLabel, 3);    // Address gets moderate space
 
+    // Workers list - more compact
     QString workersList = getWorkersForRequest(requestId);
     QLabel *workersLabel = new QLabel(workersList);
     workersLabel->setStyleSheet(
-        "font-size: 10px;"
-        "color: #FFD8A9;"
+        "font-size: 10px;" // Smaller font
+        "color: #FFD8A9;" // Light orange
         "padding-top: 0px;"
         "margin-top: 0px;"
         );
-    workersLabel->setWordWrap(true);
-    workersLabel->setMaximumHeight(20);
+    workersLabel->setWordWrap(true); // Allow wrapping for long lists
+    workersLabel->setMaximumHeight(20); // Limit height
 
+    // Status label with color coding - more compact design
     QLabel *statusLabel = new QLabel(status);
     QString statusColor;
     if (status.toLower() == "completed") {
-        statusColor = "#F1A661";
+        statusColor = "#F1A661"; // Medium orange
     } else if (status.toLower() == "in progress") {
-        statusColor = "#FFD8A9";
+        statusColor = "#FFD8A9"; // Light orange
     } else if (status.toLower() == "pending") {
-        statusColor = "#E38B29";
+        statusColor = "#E38B29"; // Dark orange
     } else {
-        statusColor = "#FDEEDC";
+        statusColor = "#FDEEDC"; // Light peach
     }
     statusLabel->setStyleSheet(QString(
                                    "background-color: %1;"
@@ -301,17 +281,19 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
     statusLabel->setMaximumHeight(18);
     statusLabel->setMaximumWidth(80);
 
+    // Status row with horizontal layout - more compact
     QHBoxLayout *statusRow = new QHBoxLayout();
     statusRow->setContentsMargins(0, 0, 0, 0);
     statusRow->setSpacing(4);
     statusRow->addWidget(statusLabel);
     statusRow->addStretch();
 
+    // View details button - more compact
     QPushButton *viewButton = new QPushButton("Details");
     viewButton->setCursor(Qt::PointingHandCursor);
     viewButton->setStyleSheet(
         "QPushButton {"
-        "   background-color: #E38B29;"
+        "   background-color: #E38B29;" // Dark orange
         "   color: #FFFFFF;"
         "   border: none;"
         "   border-radius: 5px;"
@@ -320,22 +302,26 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
         "   max-height: 18px;"
         "}"
         "QPushButton:hover {"
-        "   background-color: #C37422;"
+        "   background-color: #C37422;" // Darker orange
         "}"
         );
     viewButton->setMaximumWidth(60);
     statusRow->addWidget(viewButton);
 
+    // Add layouts to main card layout - more compact overall structure
     cardLayout->addLayout(mainLayout);
     cardLayout->addWidget(workersLabel);
     cardLayout->addLayout(statusRow);
 
+    // Set fixed height for the card to make it more compact
     card->setFixedHeight(90);
 
+    // Make the entire card clickable
     card->setCursor(Qt::PointingHandCursor);
     card->installEventFilter(this);
     card->setProperty("requestId", requestId);
 
+    // Connect the view button click
     connect(viewButton, &QPushButton::clicked, this, [this, requestId]() {
         this->viewRequestDetails(requestId);
     });
@@ -425,8 +411,228 @@ void Home::setupRequestCards()
     }
 }
 
-void Home::setupUiElements()
+QString Home::getWorkersForRequest(int requestId) {
+    QString workers;
+    QSqlQuery query;
+    query.prepare("SELECT w.NAME "
+                  "FROM ASSIGNMENT a "
+                  "JOIN WORKER w ON a.WORKERID = w.WORKERID "
+                  "WHERE a.REQUESTID = :id");
+    query.bindValue(":id", requestId);
+    if (query.exec()) {
+        QStringList workerNames;
+        while (query.next()) {
+            workerNames << query.value("NAME").toString();
+        }
+        workers = workerNames.join(", ");
+        qDebug() << "Error fetching workers:" << query.lastError().text();
+    }
+    return workers.isEmpty() ? "None" : workers;
+}
+
+
+QString Home::getAddressForRequest(int requestId) {
+    QString address;
+    QSqlQuery query;
+    query.prepare("SELECT ADDRESS FROM REQUEST WHERE REQUESTID = :id");
+    query.bindValue(":id", requestId);
+    if (query.exec() && query.next()) {
+        address = query.value("ADDRESS").toString();
+    } else {
+        qDebug() << "Error fetching address:" << query.lastError().text();
+        address = "Unknown";
+    }
+    return address;
+}
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for worker page
+void Home::loadAllWorkers()
 {
+    QScrollArea *scrollArea = new (std::nothrow) QScrollArea(ui->frame_21);
+    if (!scrollArea) {
+        qDebug() << "Failed to allocate QScrollArea";
+        return;
+    }
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setStyleSheet(
+        "QScrollArea {"
+        "   background-color: transparent;"
+        "   border: none;"
+        "}"
+        "QScrollBar:vertical {"
+        "   background: #f1f1f1;"
+        "   width: 10px;"
+        "   margin: 0px;"
+        "}"
+        "QScrollBar::handle:vertical {"
+        "   background: #DAA520;" /* Orange scrollbar handle to match design */
+        "   border-radius: 5px;"
+        "}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
+        "   height: 0px;"
+        "}"
+        );
+
+    QWidget *scrollContent = new (std::nothrow) QWidget();
+    if (!scrollContent) {
+        qDebug() << "Failed to allocate QWidget";
+        delete scrollArea;
+        return;
+    }
+    scrollContent->setStyleSheet(
+        "QWidget {"
+        "   background-color: transparent;"
+        "}"
+        );
+    QVBoxLayout *cardsLayout = new QVBoxLayout(scrollContent);
+    cardsLayout->setSpacing(15);
+
+    QSqlQuery query;
+    query.prepare("SELECT WORKER.WORKERID, LOCATIONS, TASKNAME, RATING "
+                  "FROM WORKER, SPECIALTY, TASK "
+                  "WHERE WORKER.WORKERID = SPECIALTY.WORKERID AND TASK.TASKID = SPECIALTY.TASKID "
+                  "ORDER BY RATING DESC");
+
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        QMessageBox::critical(this, "Database Error",
+                              "Could not fetch requests: " + query.lastError().text());
+        delete scrollContent;
+        delete scrollArea;
+        return;
+    }
+
+    while (query.next()) {
+        int workerId = query.value("WORKERID").toInt();
+        QString locations = query.value("LOCATIONS").toString();
+        QString taskName = query.value("TASKNAME").toString();
+        float rating = query.value("RATING").toFloat();
+
+        QFrame *card = createWorkerCard(workerId, taskName, locations, rating);
+        cardsLayout->addWidget(card);
+    }
+
+    cardsLayout->addStretch();
+    scrollContent->setLayout(cardsLayout);
+    scrollArea->setWidget(scrollContent);
+
+    QLayout *existingLayout = ui->frame_21->layout();
+    if (existingLayout) {
+        existingLayout->addWidget(scrollArea);
+    } else {
+        QVBoxLayout *newLayout = new QVBoxLayout(ui->frame_21);
+        newLayout->addWidget(scrollArea);
+        ui->frame_21->setLayout(newLayout);
+    }
+
+    if (ui->frame_21->findChild<QTableView*>("tableView")) {
+        delete ui->frame_21->findChild<QTableView*>("tableView");
+    }
+}
+
+QFrame* Home::createWorkerCard(int workerId, QString &taskName,
+                               QString &locations, const float &rating)
+{
+    QFrame *card = new QFrame();
+    card->setObjectName(QString("workerCard_%1").arg(workerId));
+    card->setFrameShape(QFrame::StyledPanel);
+
+    card->setStyleSheet(
+        "QFrame {"
+        "   background-color: transparent;"
+        "   border: 2px solid #DAA520;"
+        "   border-radius: 10px;"
+        "   padding: 10px;"
+        "   max-height: 130px;"
+        "}"
+        "QFrame:hover {"
+        "   background-color: #F0D8A8;"
+        "}"
+        );
+
+    card->setCursor(Qt::PointingHandCursor);
+
+    QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(card);
+    shadowEffect->setBlurRadius(10);
+    shadowEffect->setColor(QColor(0, 0, 0, 50));
+    shadowEffect->setOffset(2, 2);
+    card->setGraphicsEffect(shadowEffect);
+
+    QVBoxLayout *cardLayout = new QVBoxLayout(card);
+
+    QHBoxLayout *topRowLayout = new QHBoxLayout();
+
+    QHBoxLayout *leftGroupLayout = new QHBoxLayout();
+
+    QLabel *workerLabel = new QLabel(QString("Worker %1").arg(workerId));
+    workerLabel->setStyleSheet(
+        "QLabel {"
+        "   font-weight: bold;"
+        "   font-size: 25px;"
+        "   color: #E38B29;"
+        "   border: none;"
+        "}"
+        );
+
+    QLabel *ratingLabel = new QLabel(QString("Rating: %1").arg(rating, 0, 'f', 1));
+    ratingLabel->setStyleSheet(
+        "QLabel {"
+        "   font-weight: bold;"
+        "   font-size: 25px;"
+        "   color: #E38B29;"
+        "   border: none;"
+        "}"
+        );
+
+    leftGroupLayout->addWidget(workerLabel);
+    leftGroupLayout->addWidget(ratingLabel);
+    leftGroupLayout->addStretch();
+
+    QLabel *locationsLabel = new QLabel("Locations: " + locations);
+    locationsLabel->setStyleSheet(
+        "QLabel {"
+        "   font-weight: bold;"
+        "   font-size: 25px;"
+        "   color: #E38B29;"
+        "   border: none;"
+        "}"
+        );
+
+    topRowLayout->addLayout(leftGroupLayout);
+    topRowLayout->addWidget(locationsLabel);
+
+    QLabel *taskLabel = new QLabel(taskName);
+    taskLabel->setStyleSheet(
+        "QLabel {"
+        "   font-size: 15px;"
+        "   color: #E38B29;"
+        "   margin-top: 8px;"
+        "   border: none;"
+        "}"
+        );
+
+    cardLayout->addLayout(topRowLayout);
+    cardLayout->addWidget(taskLabel);
+    cardLayout->addStretch();
+
+    return card;
+}
+
+void Home::setupWorkerCards()
+{
+    loadAllWorkers();
+}
+
+Home::Home(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::Home)
+    , requestTask(nullptr)
+{
+    ui->setupUi(this);
     // Setup profile icon
     QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
     profileIcon->setFixedSize(58, 58);
@@ -465,24 +671,38 @@ void Home::setupUiElements()
     ui->endDate->setFixedHeight(40);
 
     // Set cursors for interactive elements
-    ui->addRequest->setCursor(Qt::PointingHandCursor);
-    ui->requestNav->setCursor(Qt::PointingHandCursor);
-    ui->workersNav->setCursor(Qt::PointingHandCursor);
+    ui->requestsPageBtn_2->setCursor(Qt::PointingHandCursor);
+    ui->workersPageBtn_2->setCursor(Qt::PointingHandCursor);
     ui->startDate->setCursor(Qt::PointingHandCursor);
     ui->endDate->setCursor(Qt::PointingHandCursor);
     ui->filterName->setCursor(Qt::PointingHandCursor);
-}
 
-Home::Home(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::Home)
-    , profile(nullptr)
-    , requestTask(nullptr)
-    , offeredTasks(nullptr)
-{
-    ui->setupUi(this);
-    setupUiElements();
+    // for filter icons in workers page
+    QSvgWidget *filtersSvg_3 = new QSvgWidget(":/new/svgs/Frame 10.svg");
+    filtersSvg_3->setFixedSize(116, 34);
+    QVBoxLayout *filtersLayout_3 = qobject_cast<QVBoxLayout *>(ui->filters_3->layout());
+    if (filtersLayout_3) {
+        filtersLayout_3->insertWidget(0, filtersSvg_3,0,Qt::AlignHCenter);
+    } else {
+        auto *newLayout_3 = new QVBoxLayout(ui->filters_3);
+        newLayout_3->addWidget(filtersSvg_3);
+        ui->filters_3->setLayout(newLayout_3);
+    }
+
+    QIcon calender_3(":/new/svgs/calender.svg");
+    ui->startDate_3->setIcon(calender_3);
+    ui->startDate_3->setIconSize(QSize(24, 24));
+    ui->startDate_3->setText(" Start Date");
+    ui->startDate_3->setFixedHeight(40);
+
+    QIcon calender2_3(":/new/svgs/calender.svg");
+    ui->endDate_3->setIcon(calender2_3);
+    ui->endDate_3->setIconSize(QSize(24, 24));
+    ui->endDate_3->setText(" End Date");
+    ui->endDate_3->setFixedHeight(40);
     setupRequestCards();
+    setupWorkerCards();
+    ui->addRequest->setCursor(Qt::PointingHandCursor);
 }
 
 Home::~Home()
@@ -499,27 +719,36 @@ Home::~Home()
     }
 
     delete ui;
-    delete profile;
     delete requestTask;
-    delete offeredTasks;
 }
 
-void Home::on_offeredTasks_clicked()
+void Home::on_workersPageBtn_clicked()
 {
-    if (offeredTasks) {
-        delete offeredTasks;
+    QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
+
+    if (workersPage) {
+        ui->stackedWidget_2->setCurrentWidget(workersPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
     }
-    offeredTasks = new OfferedTasks(this);
-    offeredTasks->show();
 }
 
-void Home::on_profile_clicked()
+void Home::on_requestsPageBtn_2_clicked()
 {
-    if (profile) {
-        delete profile;
+    QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
+
+    if (requestsPage) {
+        ui->stackedWidget_2->setCurrentWidget(requestsPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
     }
-    profile = new Profile(this);
-    profile->show();
+}
+
+void Home::on_addRequest_clicked()
+{
+    requestTask = new RequestTask(this);
+    requestTask->show();
+    this->hide();
 }
 
 void Home::on_request_clicked()
@@ -596,7 +825,6 @@ void Home::on_startDate_clicked()
     connect(startDateCalendar, &QCalendarWidget::clicked, this, &Home::onStartDateSelected);
     connect(startDateCalendar, &QCalendarWidget::clicked, startDateCalendar, &QCalendarWidget::deleteLater);
     connect(startDateCalendar, &QCalendarWidget::destroyed, [this]() { startDateCalendar = nullptr; });
-
     startDateCalendar->show();
 }
 

@@ -7,12 +7,12 @@ namespace Ui {
 class RequestTask;
 }
 
-class RequestTask : public QWidget
+class RequestTask : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit RequestTask(QWidget *parent = nullptr);
+    explicit RequestTask(QMainWindow *parent = nullptr);
     ~RequestTask();
 
 signals:
@@ -20,8 +20,8 @@ signals:
 
 private slots:
     void on_back_clicked();
-
-    void on_submit_clicked();
+    void on_add_clicked();
+    void on_cancel_clicked();
 
 private:
     Ui::RequestTask *ui;

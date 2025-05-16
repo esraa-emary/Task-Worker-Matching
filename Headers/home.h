@@ -2,8 +2,6 @@
 #define HOME_H
 
 #include <QMainWindow>
-#include "offeredtasks.h"
-#include "profile.h"
 #include "requesttask.h"
 #include <QFrame>
 #include <QSqlQuery>
@@ -28,8 +26,9 @@ signals:
     void backToMainWindow();
 
 private slots:
-    void on_offeredTasks_clicked();
-    void on_profile_clicked();
+    void on_workersPageBtn_clicked();
+    void on_requestsPageBtn_2_clicked();
+    void on_addRequest_clicked();
     void on_request_clicked();
     void on_logout_clicked();
     void on_pushButton_clicked();
@@ -43,9 +42,7 @@ private:
     QDate startDateValue = QDate(2000, 1, 1);
     QDate endDateValue = QDate::currentDate();
     Ui::Home *ui;
-    Profile *profile;
     RequestTask *requestTask;
-    OfferedTasks *offeredTasks;
     QCalendarWidget *startDateCalendar = nullptr;
     QCalendarWidget *endDateCalendar = nullptr;
 
@@ -61,6 +58,16 @@ private:
 
     QString getWorkersForRequest(int requestId);
     QString getAddressForRequest(int requestId);
+
+    // for workers page
+    void loadAllWorkers();
+    void setupWorkerCards();
+    QString getAddressForWorker(int workertId);
+    QFrame* createWorkerCard(int workerId,QString &taskName,
+                             QString &locations,const float &rating);
+
+    // for making a request
+
 };
 
 #endif // HOME_H
