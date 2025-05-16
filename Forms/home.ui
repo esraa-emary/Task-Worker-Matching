@@ -223,7 +223,7 @@ border-right: 2px solid #E38B29;
                      <number>32</number>
                     </property>
                     <item>
-                     <widget class="QPushButton" name="pushButton_2">
+                     <widget class="QPushButton" name="requestNav">
                       <property name="styleSheet">
                        <string notr="true">QPushButton{
 	border-bottom: 2px solid #E38B29;
@@ -235,7 +235,7 @@ border-right: 2px solid #E38B29;
                      </widget>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="pushButton">
+                     <widget class="QPushButton" name="workersNav">
                       <property name="text">
                        <string>Workers</string>
                       </property>

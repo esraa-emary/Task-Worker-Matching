@@ -2,25 +2,18 @@
 #include "ui_home.h"
 #include <QSvgWidget>
 #include <QVBoxLayout>
-#include "ui_requesttask.h"
 #include <QDebug>
 #include <QSqlDatabase>
 #include <QSqlError>
-
 #include <QTableView>
 #include <QSqlTableModel>
-
-#include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QSqlError>
-#include <QDebug>
 #include <QMessageBox>
-
-
 #include <QTimeZone>
 #include <QScrollArea>
 #include <QGraphicsDropShadowEffect>
-bool connectToDatabase()
+
+bool Home::connectToDatabase()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
 
@@ -48,9 +41,61 @@ bool connectToDatabase()
     return true;
 }
 
+QString Home::getWorkersForRequest(int requestId) {
+    QString workers;
+    QSqlQuery query;
+    query.prepare("SELECT w.NAME "
+                  "FROM ASSIGNMENT a "
+                  "JOIN WORKER w ON a.WORKERID = w.WORKERID "
+                  "WHERE a.REQUESTID = :id");
+    query.bindValue(":id", requestId);
+
+    if (query.exec()) {
+        QStringList workerNames;
+        while (query.next()) {
+            workerNames << query.value("NAME").toString();
+        }
+        workers = workerNames.join(", ");
+    } else {
+        qDebug() << "Error fetching workers:" << query.lastError().text();
+    }
+    return workers.isEmpty() ? "No workers assigned" : workers;
+}
+
+QString Home::getAddressForRequest(int requestId) {
+    QString address;
+    QSqlQuery query;
+    query.prepare("SELECT ADDRESS FROM REQUEST WHERE REQUESTID = :id");
+    query.bindValue(":id", requestId);
+
+    if (query.exec() && query.next()) {
+        address = query.value("ADDRESS").toString();
+    } else {
+        qDebug() << "Error fetching address:" << query.lastError().text();
+        address = "Address not found";
+    }
+    return address;
+}
+
 void Home::loadAllRequests()
 {
-    QScrollArea *scrollArea = new (std::nothrow) QScrollArea(ui->frame_7);
+    QLayout *existingLayout = ui->Requests->layout();
+    if (existingLayout) {
+        QLayoutItem *item;
+        while ((item = existingLayout->takeAt(0)) != nullptr) {
+            if (QWidget *widget = item->widget()) {
+                widget->deleteLater();
+            }
+            delete item;
+        }
+        delete existingLayout;
+    }
+
+    for (QWidget *child : ui->Requests->findChildren<QWidget*>()) {
+        child->deleteLater();
+    }
+
+    QScrollArea *scrollArea = new (std::nothrow) QScrollArea(ui->Requests);
     if (!scrollArea) {
         qDebug() << "Failed to allocate QScrollArea";
         return;
@@ -63,13 +108,13 @@ void Home::loadAllRequests()
         "   border: none;"
         "}"
         "QScrollBar:vertical {"
-        "   background: #f1f1f1;"
-        "   width: 10px;"
+        "   background: #FFD8A9;"
+        "   width: 8px;"
         "   margin: 0px;"
         "}"
         "QScrollBar::handle:vertical {"
-        "   background: #DAA520;" /* Orange scrollbar handle to match design */
-        "   border-radius: 5px;"
+        "   background: #E38B29;"
+        "   border-radius: 4px;"
         "}"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
         "   height: 0px;"
@@ -88,11 +133,17 @@ void Home::loadAllRequests()
         "}"
         );
     QVBoxLayout *cardsLayout = new QVBoxLayout(scrollContent);
-    cardsLayout->setSpacing(15);
+    cardsLayout->setSpacing(8);
 
     QSqlQuery query;
-    query.prepare("SELECT ClientID, RequestID, TaskName, RequestTime, Status "
-                  "FROM ClientRequestHistoryView ORDER BY RequestTime DESC");
+    query.prepare(
+        "SELECT ClientID, RequestID, TaskName, RequestTime, Status "
+        "FROM ClientRequestHistoryView "
+        "WHERE RequestTime >= :startDate AND RequestTime <= :endDate "
+        "ORDER BY RequestTime DESC"
+        );
+    query.bindValue(":startDate", startDateValue.isValid() ? startDateValue : QDate(2000, 1, 1));
+    query.bindValue(":endDate", endDateValue.isValid() ? endDateValue.addDays(1) : QDate(2100, 12, 31));
 
     if (!query.exec()) {
         qDebug() << "Error executing query:" << query.lastError().text();
@@ -130,137 +181,156 @@ void Home::loadAllRequests()
     scrollContent->setLayout(cardsLayout);
     scrollArea->setWidget(scrollContent);
 
-    QLayout *existingLayout = ui->frame_7->layout();
-    if (existingLayout) {
-        existingLayout->addWidget(scrollArea);
-    } else {
-        QVBoxLayout *newLayout = new QVBoxLayout(ui->frame_7);
-        newLayout->addWidget(scrollArea);
-        ui->frame_7->setLayout(newLayout);
-    }
-
-    if (ui->frame_7->findChild<QTableView*>("tableView")) {
-        delete ui->frame_7->findChild<QTableView*>("tableView");
-    }
+    QVBoxLayout *newLayout = new QVBoxLayout(ui->Requests);
+    newLayout->setContentsMargins(0, 0, 0, 0);
+    newLayout->addWidget(scrollArea);
+    ui->Requests->setLayout(newLayout);
 }
+
 QFrame* Home::createRequestCard(int clientId, int requestId, const QString &taskName,
                                 const QDateTime &requestTime, const QString &status)
 {
     QFrame *card = new QFrame();
     card->setObjectName(QString("requestCard_%1").arg(requestId));
     card->setFrameShape(QFrame::StyledPanel);
-
     card->setStyleSheet(
-        "QFrame {"
-        "   background-color: transparent;"
-        "   border: 2px solid #DAA520;"
-        "   border-radius: 10px;"
-        "   padding: 10px;"
-        "}"
-        "QFrame:hover {"
-        "   background-color: #F0D8A8;"
-        "}"
+        QString("#%1 {"
+                "   background-color: #FDEEDC;"
+                "   border-radius: 20px;"
+                "   border: 2px solid #E38B29;"
+                "}")
+            .arg(card->objectName())
         );
 
     QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(card);
-    shadowEffect->setBlurRadius(10);
-    shadowEffect->setColor(QColor(0, 0, 0, 50));
-    shadowEffect->setOffset(2, 2);
+    shadowEffect->setBlurRadius(15);
+    shadowEffect->setColor(QColor(0, 0, 0, 30));
+    shadowEffect->setOffset(0, 2);
     card->setGraphicsEffect(shadowEffect);
 
     QVBoxLayout *cardLayout = new QVBoxLayout(card);
+    cardLayout->setContentsMargins(8, 8, 8, 8);
+    cardLayout->setSpacing(2);
 
-    // Title Label
-    QLabel *titleLabel = new QLabel(QString("Request %1").arg(requestId));
+    QHBoxLayout *mainLayout = new QHBoxLayout();
+    mainLayout->setSpacing(3);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+
+    QHBoxLayout *titleDateLayout = new QHBoxLayout();
+    titleDateLayout->setSpacing(0);
+    titleDateLayout->setContentsMargins(0, 0, 0, 0);
+
+    QLabel *titleLabel = new QLabel(taskName);
     titleLabel->setStyleSheet(
-        "QLabel {"
-        "   font-weight: bold;"
-        "   font-size: 16px;"
-        "   color: #E38B29;"
-        "   margin-bottom: 5px;"
-        "}"
+        "font-weight: bold;"
+        "font-size: 13px;"
+        "color: #F1A661;"
+        "padding: 0px;"
+        "margin: 0px;"
         );
+    titleLabel->setMaximumWidth(100);
+    titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
+    // Date label
     QString dateString = requestTime.isValid()
-                             ? QLocale().toString(requestTime, "M-d-yyyy, d-M-yyyy")
-                             : "Unknown Date";
+                             ? QLocale().toString(requestTime, "M/d/yy")
+                             : "Invalid";
     QLabel *dateLabel = new QLabel(dateString);
     dateLabel->setStyleSheet(
-        "QLabel {"
-        "   color: #E38B29;"
-        "   margin-bottom: 5px;"
-        "}"
+        "font-size: 10px;"
+        "color: #FFD8A9;"
+        "padding: 0px;"
+        "padding-left: 2px;"
+        "margin: 0px;"
         );
+    dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    // Workers Label
-    QString workersString = getWorkersForRequest(requestId);
-    QLabel *workersLabel = new QLabel("Workers: " + workersString);
-    workersLabel->setStyleSheet(
-        "QLabel {"
-        "   color: #E38B29;" /* Updated font color */
-        "   margin-bottom: 5px;"
-        "}"
-        );
+    titleDateLayout->addWidget(titleLabel);
+    titleDateLayout->addWidget(dateLabel);
 
-    // Address Label
     QString address = getAddressForRequest(requestId);
-    QLabel *addressLabel = new QLabel("Address: " + address);
+    QLabel *addressLabel = new QLabel();
+    if (address.length() > 20) {
+        addressLabel->setText(address.left(17) + "...");
+        addressLabel->setToolTip(address);
+    } else {
+        addressLabel->setText(address);
+    }
     addressLabel->setStyleSheet(
-        "QLabel {"
-        "   font-weight: bold;"
-        "   color: #E38B29;"
-        "   margin-top: 5px;"
-        "}"
+        "font-size: 10px;"
+        "color: #FFD8A9;"
+        "padding: 0px;"
+        "margin: 0px;"
         );
+    addressLabel->setAlignment(Qt::AlignRight);
 
-    // Status Label
+    mainLayout->addLayout(titleDateLayout, 4);
+    mainLayout->addStretch(1);
+    mainLayout->addWidget(addressLabel, 3);
+
+    QString workersList = getWorkersForRequest(requestId);
+    QLabel *workersLabel = new QLabel(workersList);
+    workersLabel->setStyleSheet(
+        "font-size: 10px;"
+        "color: #FFD8A9;"
+        "padding-top: 0px;"
+        "margin-top: 0px;"
+        );
+    workersLabel->setWordWrap(true);
+    workersLabel->setMaximumHeight(20);
+
     QLabel *statusLabel = new QLabel(status);
     QString statusColor;
     if (status.toLower() == "completed") {
-        statusColor = "#4CAF50";
+        statusColor = "#F1A661";
     } else if (status.toLower() == "in progress") {
-        statusColor = "#2196F3";
+        statusColor = "#FFD8A9";
     } else if (status.toLower() == "pending") {
-        statusColor = "#FF9800";
+        statusColor = "#E38B29";
     } else {
-        statusColor = "#9E9E9E";
+        statusColor = "#FDEEDC";
     }
     statusLabel->setStyleSheet(QString(
-                                   "QLabel {"
-                                   "   background-color: %1;"
-                                   "   color: white;"
-                                   "   border-radius: 10px;"
-                                   "   padding: 3px 10px;"
-                                   "   font-weight: bold;"
-                                   "}"
+                                   "background-color: %1;"
+                                   "color: #FFFFFF;"
+                                   "border-radius: 8px;"
+                                   "padding: 2px 8px;"
+                                   "font-weight: bold;"
+                                   "font-size: 10px;"
                                    ).arg(statusColor));
-
-    // Layout
-    cardLayout->addWidget(titleLabel);
-    cardLayout->addWidget(dateLabel);
-    cardLayout->addWidget(workersLabel);
-    cardLayout->addWidget(addressLabel);
+    statusLabel->setMaximumHeight(18);
+    statusLabel->setMaximumWidth(80);
 
     QHBoxLayout *statusRow = new QHBoxLayout();
+    statusRow->setContentsMargins(0, 0, 0, 0);
+    statusRow->setSpacing(4);
     statusRow->addWidget(statusLabel);
     statusRow->addStretch();
 
-    QPushButton *viewButton = new QPushButton("View Details");
+    QPushButton *viewButton = new QPushButton("Details");
     viewButton->setCursor(Qt::PointingHandCursor);
     viewButton->setStyleSheet(
         "QPushButton {"
-        "   background-color: #DAA520;"
-        "   color: white;"
+        "   background-color: #E38B29;"
+        "   color: #FFFFFF;"
         "   border: none;"
         "   border-radius: 5px;"
-        "   padding: 5px 15px;"
+        "   padding: 2px 8px;"
+        "   font-size: 10px;"
+        "   max-height: 18px;"
         "}"
         "QPushButton:hover {"
-        "   background-color: #C68E17;"
+        "   background-color: #C37422;"
         "}"
         );
+    viewButton->setMaximumWidth(60);
     statusRow->addWidget(viewButton);
+
+    cardLayout->addLayout(mainLayout);
+    cardLayout->addWidget(workersLabel);
     cardLayout->addLayout(statusRow);
+
+    card->setFixedHeight(90);
 
     card->setCursor(Qt::PointingHandCursor);
     card->installEventFilter(this);
@@ -272,6 +342,7 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
 
     return card;
 }
+
 bool Home::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonRelease) {
@@ -354,14 +425,9 @@ void Home::setupRequestCards()
     }
 }
 
-Home::Home(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::Home)
-    , profile(nullptr)
-    , requestTask(nullptr)
-    , offeredTasks(nullptr)
+void Home::setupUiElements()
 {
-    ui->setupUi(this);
+    // Setup profile icon
     QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
     profileIcon->setFixedSize(58, 58);
     QHBoxLayout *profileLayout = qobject_cast<QHBoxLayout *>(ui->profile->layout());
@@ -373,6 +439,7 @@ Home::Home(QWidget *parent)
         ui->profile->setLayout(newLayout);
     }
 
+    // Setup filters icon
     QSvgWidget *filtersSvg = new QSvgWidget(":/new/svgs/Frame 10.svg");
     filtersSvg->setFixedSize(116, 34);
     QVBoxLayout *filtersLayout = qobject_cast<QVBoxLayout *>(ui->filters->layout());
@@ -384,23 +451,53 @@ Home::Home(QWidget *parent)
         ui->filters->setLayout(newLayout);
     }
 
+    // Setup date buttons
     QIcon calender(":/new/svgs/calender.svg");
     ui->startDate->setIcon(calender);
     ui->startDate->setIconSize(QSize(24, 24));
     ui->startDate->setText(" Start Date");
-   ui->startDate->setFixedHeight(40);
+    ui->startDate->setFixedHeight(40);
+
     QIcon calender2(":/new/svgs/calender.svg");
     ui->endDate->setIcon(calender2);
     ui->endDate->setIconSize(QSize(24, 24));
     ui->endDate->setText(" End Date");
     ui->endDate->setFixedHeight(40);
 
-    setupRequestCards();
+    // Set cursors for interactive elements
     ui->addRequest->setCursor(Qt::PointingHandCursor);
+    ui->requestNav->setCursor(Qt::PointingHandCursor);
+    ui->workersNav->setCursor(Qt::PointingHandCursor);
+    ui->startDate->setCursor(Qt::PointingHandCursor);
+    ui->endDate->setCursor(Qt::PointingHandCursor);
+    ui->filterName->setCursor(Qt::PointingHandCursor);
+}
+
+Home::Home(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::Home)
+    , profile(nullptr)
+    , requestTask(nullptr)
+    , offeredTasks(nullptr)
+{
+    ui->setupUi(this);
+    setupUiElements();
+    setupRequestCards();
 }
 
 Home::~Home()
 {
+    // Properly clean up any open calendar widgets
+    if (startDateCalendar) {
+        startDateCalendar->deleteLater();
+        startDateCalendar = nullptr;
+    }
+
+    if (endDateCalendar) {
+        endDateCalendar->deleteLater();
+        endDateCalendar = nullptr;
+    }
+
     delete ui;
     delete profile;
     delete requestTask;
@@ -409,18 +506,27 @@ Home::~Home()
 
 void Home::on_offeredTasks_clicked()
 {
+    if (offeredTasks) {
+        delete offeredTasks;
+    }
     offeredTasks = new OfferedTasks(this);
     offeredTasks->show();
 }
 
 void Home::on_profile_clicked()
 {
+    if (profile) {
+        delete profile;
+    }
     profile = new Profile(this);
     profile->show();
 }
 
 void Home::on_request_clicked()
 {
+    if (requestTask) {
+        delete requestTask;
+    }
     requestTask = new RequestTask(this);
     requestTask->show();
 }
@@ -431,9 +537,103 @@ void Home::on_logout_clicked()
     this->close();
 }
 
-
 void Home::on_pushButton_clicked()
 {
-
+    // Implementation for other button if needed
 }
 
+void Home::on_filterName_clicked()
+{
+    // Implementation for filtering by name
+    // This was missing but should be added if needed
+}
+
+void Home::onStartDateSelected(const QDate &date)
+{
+    startDateValue = date;
+    ui->startDate->setText(" " + startDateValue.toString("yyyy-MM-dd"));
+    loadAllRequests();
+}
+
+void Home::onEndDateSelected(const QDate &date)
+{
+    endDateValue = date;
+    ui->endDate->setText(" " + endDateValue.toString("yyyy-MM-dd"));
+    loadAllRequests();
+}
+
+void Home::on_startDate_clicked()
+{
+    // Cleanup any existing calendar to prevent memory leaks
+    if (startDateCalendar) {
+        startDateCalendar->deleteLater();
+    }
+
+    startDateCalendar = new QCalendarWidget();
+    startDateCalendar->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    startDateCalendar->setStyleSheet(
+        "QCalendarWidget {"
+        "   background-color: #FDEEDC;" // Light peach
+        "   color: #F1A661;" // Medium orange
+        "   font-size: 10px;"
+        "}"
+        "QCalendarWidget QToolButton {"
+        "   color: #F1A661;"
+        "}"
+        "QCalendarWidget QMenu {"
+        "   background-color: #FDEEDC;"
+        "   color: #F1A661;"
+        "}"
+        );
+    startDateCalendar->setSelectedDate(startDateValue.isValid() ? startDateValue : QDate::currentDate());
+    startDateCalendar->setMinimumDate(QDate(2000, 1, 1));
+    startDateCalendar->setMaximumDate(QDate(2100, 12, 31));
+
+    // Position below the button
+    QPoint pos = ui->startDate->mapToGlobal(QPoint(0, ui->startDate->height()));
+    startDateCalendar->move(pos);
+
+    connect(startDateCalendar, &QCalendarWidget::clicked, this, &Home::onStartDateSelected);
+    connect(startDateCalendar, &QCalendarWidget::clicked, startDateCalendar, &QCalendarWidget::deleteLater);
+    connect(startDateCalendar, &QCalendarWidget::destroyed, [this]() { startDateCalendar = nullptr; });
+
+    startDateCalendar->show();
+}
+
+void Home::on_endDate_clicked()
+{
+    // Cleanup any existing calendar to prevent memory leaks
+    if (endDateCalendar) {
+        endDateCalendar->deleteLater();
+    }
+
+    endDateCalendar = new QCalendarWidget();
+    endDateCalendar->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    endDateCalendar->setStyleSheet(
+        "QCalendarWidget {"
+        "   background-color: #FDEEDC;" // Light peach
+        "   color: #F1A661;" // Medium orange
+        "   font-size: 10px;"
+        "}"
+        "QCalendarWidget QToolButton {"
+        "   color: #F1A661;"
+        "}"
+        "QCalendarWidget QMenu {"
+        "   background-color: #FDEEDC;"
+        "   color: #F1A661;"
+        "}"
+        );
+    endDateCalendar->setSelectedDate(endDateValue.isValid() ? endDateValue : QDate::currentDate());
+    endDateCalendar->setMinimumDate(QDate(2000, 1, 1));
+    endDateCalendar->setMaximumDate(QDate(2100, 12, 31));
+
+    // Position below the button
+    QPoint pos = ui->endDate->mapToGlobal(QPoint(0, ui->endDate->height()));
+    endDateCalendar->move(pos);
+
+    connect(endDateCalendar, &QCalendarWidget::clicked, this, &Home::onEndDateSelected);
+    connect(endDateCalendar, &QCalendarWidget::clicked, endDateCalendar, &QCalendarWidget::deleteLater);
+    connect(endDateCalendar, &QCalendarWidget::destroyed, [this]() { endDateCalendar = nullptr; });
+
+    endDateCalendar->show();
+}
