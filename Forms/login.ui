@@ -196,7 +196,7 @@ transition: all 0.3s ease-in-out;
               </widget>
              </item>
              <item row="2" column="0">
-              <widget class="QPushButton" name="submit">
+              <widget class="QPushButton" name="login">
                <property name="maximumSize">
                 <size>
                  <width>410</width>
@@ -221,7 +221,7 @@ transition: all 0.3s ease-in-out;
            </widget>
           </item>
           <item row="0" column="0" colspan="2">
-           <widget class="QLabel" name="login">
+           <widget class="QLabel" name="label">
             <property name="maximumSize">
              <size>
               <width>16777215</width>

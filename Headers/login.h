@@ -22,7 +22,7 @@ signals:
 private slots:
     void on_back_clicked();
 
-    void on_submit_clicked();
+    void on_login_clicked();
 
 private:
     Ui::LogIn *ui;

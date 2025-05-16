@@ -71,7 +71,11 @@ void RequestTask::on_add_clicked() {
 
     int requestId = 1;
     if (query.next()) {
-        requestId = query.value(0).toInt() + 1;
+        QVariant maxIdVar = query.value(0);
+        if (maxIdVar.isValid() && !maxIdVar.isNull()) {
+            requestId = maxIdVar.toInt() + 1;
+        }
+        else requestId = 1;
     }
 
     query.prepare("SELECT taskId FROM task WHERE taskName = :task");

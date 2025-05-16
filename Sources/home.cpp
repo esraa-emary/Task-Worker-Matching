@@ -16,40 +16,9 @@
 #include <QDebug>
 #include <QMessageBox>
 
-
 #include <QTimeZone>
 #include <QScrollArea>
 #include <QGraphicsDropShadowEffect>
-
-
-bool connectToDatabase()
-{
-    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
-
-    QString serverName = "DESKTOP-TKK26SO";
-    // QString serverName = "HEFNY";
-    QString dbName = "TaskWorkerMatching";
-
-    QString connectionString = QString(
-                                   "Driver={ODBC Driver 17 for SQL Server};"
-                                   "Server=%1;"
-                                   "Database=%2;"
-                                   "Trusted_Connection=yes;"
-                                   "Encrypt=yes;"
-                                   "TrustServerCertificate=yes;"
-                                   ).arg(serverName).arg(dbName);
-
-    db.setDatabaseName(connectionString);
-
-    if (!db.open()) {
-        qDebug() << "Error connecting to database:" << db.lastError().text();
-        return false;
-    }
-
-    qDebug() << "Connected to database successfully";
-    qDebug() << "System timezone:" << QTimeZone::systemTimeZoneId();
-    return true;
-}
 
 void Home::loadAllRequests()
 {
@@ -351,12 +320,7 @@ void Home::viewRequestDetails(int requestId)
 
 void Home::setupRequestCards()
 {
-    if (connectToDatabase()) {
-        loadAllRequests();
-    } else {
-        QMessageBox::critical(this, "Database Connection Error",
-                              "Failed to connect to the database.");
-    }
+    loadAllRequests();
 }
 
 QString Home::getWorkersForRequest(int requestId) {
@@ -573,12 +537,7 @@ QFrame* Home::createWorkerCard(int workerId, QString &taskName,
 
 void Home::setupWorkerCards()
 {
-    if (connectToDatabase()) {
-        loadAllWorkers();
-    } else {
-        QMessageBox::critical(this, "Database Connection Error",
-                              "Failed to connect to the database.");
-    }
+    loadAllWorkers();
 }
 
 QString Home::getAddressForWorker(int workertId) {
@@ -595,13 +554,6 @@ QString Home::getAddressForWorker(int workertId) {
     }
     return address;
 }
-
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
