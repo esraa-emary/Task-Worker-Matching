@@ -38,6 +38,8 @@ private slots:
     void onEndDateSelected(const QDate &date);
     void on_filterName_clicked();
 
+    void on_workersPageBtn_3_clicked();
+
 private:
     QDate startDateValue = QDate(2000, 1, 1);
     QDate endDateValue = QDate::currentDate();
