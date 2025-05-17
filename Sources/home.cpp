@@ -13,7 +13,9 @@
 #include <QTimeZone>
 #include <QScrollArea>
 #include <QGraphicsDropShadowEffect>
-
+#include <QTextEdit>
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for Requests page
 
 bool Home::connectToDatabase()
 {
@@ -347,8 +349,12 @@ void Home::viewRequestDetails(int requestId)
     qDebug() << "Viewing details for request ID:" << requestId;
 
     QSqlQuery query;
-    query.prepare("SELECT CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION "
-                  "FROM REQUEST WHERE REQUESTID = :id");
+    query.prepare(
+        "SELECT r.CLIENTID, r.TASKID, t.TASKNAME, r.ADDRESS, r.REQUESTTIME, r.REQUESTDESCRIPTION "
+        "FROM REQUEST r "
+        "JOIN TASK t ON r.TASKID = t.TASKID "
+        "WHERE r.REQUESTID = :id"
+        );
     query.bindValue(":id", requestId);
 
     if (!query.exec()) {
@@ -358,49 +364,163 @@ void Home::viewRequestDetails(int requestId)
         return;
     }
 
+    QWidget *requestPage = ui->stackedWidget_2->widget(2);
+    if (!requestPage) {
+        qDebug() << "Error: requestPage not found!";
+        return;
+    }
+
     if (query.next()) {
-        int clientId = query.value("CLIENTID").toInt();
-        int taskId = query.value("TASKID").toInt();
+        QString taskName = query.value("TASKNAME").toString();
         QString address = query.value("ADDRESS").toString();
-        QVariant requestTimeVar = query.value("REQUESTTIME");
-        QVariant preferredTimeVar = query.value("PREFERREDTIMESLOT");
+        QDateTime requestTime = query.value("REQUESTTIME").toDateTime();
+        requestTime.setTimeZone(QTimeZone("Europe/Athens")); // Adjust for EEST
         QString description = query.value("REQUESTDESCRIPTION").toString();
 
-        QDateTime requestTime;
-        QString requestTimeStr = "Unknown";
-        if (!requestTimeVar.isNull() && requestTimeVar.canConvert<QDateTime>()) {
-            requestTime = requestTimeVar.toDateTime();
-            requestTime.setTimeZone(QTimeZone("Europe/Athens")); // EEST
-            requestTimeStr = QLocale().toString(requestTime, "yyyy-MM-dd hh:mm ap");
+        // Format the date
+        QString dateString = requestTime.isValid() ? QLocale().toString(requestTime, "yyyy-MM-dd hh:mm ap") : "Unknown";
+
+        // Find the main frame (frame_10)
+        QFrame *mainFrame = requestPage->findChild<QFrame*>("frame_10");
+        if (mainFrame) {
+            // Find the RequestContent frame inside frame_10
+            QFrame *contentFrame = mainFrame->findChild<QFrame*>("RequestContent");
+            if (contentFrame) {
+                // Populate requestHeader frame
+                QFrame *headerFrame = contentFrame->findChild<QFrame*>("requestHeader");
+                if (headerFrame) {
+                    // Check if back button exists, if not, add it with SVG
+                    QPushButton *backButton = headerFrame->findChild<QPushButton*>("backButton");
+                    if (!backButton) {
+                        backButton = new QPushButton(headerFrame);
+                        backButton->setObjectName("backButton");
+                        backButton->setStyleSheet(
+                            "QPushButton {"
+                            "   background-color: #E38B29;"
+                            "   border-radius: 5px;"
+                            "}"
+                            "QPushButton:hover {"
+                            "   background-color: #C37422;"
+                            "}"
+                            );
+                        QSvgWidget *svgWidget = new QSvgWidget(":/new/svgs/back.svg", backButton);
+                        backButton->setIcon(QIcon(svgWidget->grab()));
+                        backButton->setIconSize(QSize(50, 38));
+                        backButton->setFixedSize(50, 38);
+                        QHBoxLayout *headerLayout = qobject_cast<QHBoxLayout*>(headerFrame->layout());
+                        if (!headerLayout) {
+                            headerLayout = new QHBoxLayout(headerFrame);
+                            headerFrame->setLayout(headerLayout);
+                        }
+                        headerLayout->insertWidget(0, backButton);
+                        connect(backButton, &QPushButton::clicked, this, [this]() {
+                            ui->stackedWidget_2->setCurrentIndex(0); // Back to Requests page
+                        });
+                    }
+
+                    // Create a frame for title and date
+                    QFrame *titleDateFrame = headerFrame->findChild<QFrame*>("titleDateFrame");
+                    if (!titleDateFrame) {
+                        titleDateFrame = new QFrame(headerFrame);
+                        titleDateFrame->setObjectName("titleDateFrame");
+                        QHBoxLayout *titleDateLayout = new QHBoxLayout(titleDateFrame);
+                        titleDateFrame->setLayout(titleDateLayout);
+                        titleDateLayout->setSpacing(5); // Minimal spacing between title and date
+                        headerFrame->layout()->addWidget(titleDateFrame);
+                    }
+
+                    // Title label
+                    QLabel *titleLabel = titleDateFrame->findChild<QLabel*>("requestTitle");
+                    if (!titleLabel) {
+                        titleLabel = new QLabel(titleDateFrame);
+                        titleLabel->setObjectName("requestTitle");
+                        titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #E38B29;");
+                        titleDateFrame->layout()->addWidget(titleLabel);
+                    }
+                    titleLabel->setText(taskName);
+
+                    // Date label
+                    QLabel *dateLabel = titleDateFrame->findChild<QLabel*>("requestDate");
+                    if (!dateLabel) {
+                        dateLabel = new QLabel(titleDateFrame);
+                        dateLabel->setObjectName("requestDate");
+                        dateLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+                        titleDateFrame->layout()->addWidget(dateLabel);
+                    }
+                    dateLabel->setText(dateString);
+
+                    // Address label
+                    QLabel *addressLabel = headerFrame->findChild<QLabel*>("requestAddress");
+                    if (!addressLabel) {
+                        addressLabel = new QLabel(headerFrame);
+                        addressLabel->setObjectName("requestAddress");
+                        addressLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+                        headerFrame->layout()->addWidget(addressLabel);
+                    }
+                    addressLabel->setText(address);
+                }
+
+                // Populate tasks frame
+                QFrame *tasksFrame = contentFrame->findChild<QFrame*>("tasks");
+                if (tasksFrame) {
+                    QLabel *tasksLabel = tasksFrame->findChild<QLabel*>("tasksLabel");
+                    if (!tasksLabel) {
+                        tasksLabel = new QLabel(tasksFrame);
+                        tasksLabel->setObjectName("tasksLabel");
+                        tasksLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
+                        QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(tasksFrame->layout());
+                        if (!layout) {
+                            layout = new QVBoxLayout(tasksFrame);
+                            tasksFrame->setLayout(layout);
+                        }
+                        layout->addWidget(tasksLabel);
+                    }
+                    tasksLabel->setText(taskName);
+                }
+
+                // Populate description frame
+                QFrame *descriptionFrame = contentFrame->findChild<QFrame*>("description");
+                if (descriptionFrame) {
+                    QTextEdit *descriptionText = descriptionFrame->findChild<QTextEdit*>("descriptionText");
+                    if (!descriptionText) {
+                        descriptionText = new QTextEdit(descriptionFrame);
+                        descriptionText->setObjectName("descriptionText");
+                        descriptionText->setReadOnly(true);
+                        descriptionText->setStyleSheet(
+                            "background-color: #FFD8A9;"
+                            "color: #E38B29;"
+                            "border-radius: 5px;"
+                            "font-size: 14px;"
+                            );
+                        QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(descriptionFrame->layout());
+                        if (!layout) {
+                            layout = new QVBoxLayout(descriptionFrame);
+                            descriptionFrame->setLayout(layout);
+                        }
+                        layout->addWidget(descriptionText);
+                    }
+                    descriptionText->setText(description.isEmpty() ? "No description provided" : description);
+                }
+            }
+
+            // Populate workers list (directly under frame_10)
+            QFrame *workersListFrame = mainFrame->findChild<QFrame*>("workersListFrame");
+            if (workersListFrame) {
+                QLabel *workerListLabel = workersListFrame->findChild<QLabel*>("workerList");
+                if (workerListLabel) {
+                    QString workers = getWorkersForRequest(requestId);
+                    workerListLabel->setText(workers.isEmpty() ? "None" : workers);
+                }
+            }
         }
 
-        QDateTime preferredTime;
-        QString preferredTimeStr = "Unknown";
-        if (!preferredTimeVar.isNull() && preferredTimeVar.canConvert<QDateTime>()) {
-            preferredTime = preferredTimeVar.toDateTime();
-            preferredTime.setTimeZone(QTimeZone("Europe/Athens")); // EEST
-            preferredTimeStr = QLocale().toString(preferredTime, "yyyy-MM-dd hh:mm ap");
-        }
-
-        QString descriptionStr = description.isEmpty() ? "No description provided" : description;
-
-        QMessageBox::information(this, "Request Details",
-                                 QString("Request #%1\nClient ID: %2\nTask ID: %3\n"
-                                         "Address: %4\nRequest Time: %5\n"
-                                         "Preferred Time: %6\nDescription: %7")
-                                     .arg(requestId)
-                                     .arg(clientId)
-                                     .arg(taskId)
-                                     .arg(address)
-                                     .arg(requestTimeStr)
-                                     .arg(preferredTimeStr)
-                                     .arg(descriptionStr));
+        // Switch to requestPage
+        ui->stackedWidget_2->setCurrentIndex(2);
     } else {
         QMessageBox::warning(this, "Request Not Found",
                              "Could not find details for the selected request.");
     }
 }
-
 void Home::setupRequestCards()
 {
     if (connectToDatabase()) {
@@ -448,7 +568,7 @@ QString Home::getAddressForRequest(int requestId) {
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
-// for worker page
+// for workers page
 void Home::loadAllWorkers()
 {
     QScrollArea *scrollArea = new (std::nothrow) QScrollArea(ui->frame_21);
@@ -650,7 +770,7 @@ Home::Home(QWidget *parent)
     filtersSvg->setFixedSize(116, 34);
     QVBoxLayout *filtersLayout = qobject_cast<QVBoxLayout *>(ui->filters->layout());
     if (filtersLayout) {
-        filtersLayout->insertWidget(0, filtersSvg);
+        filtersLayout->insertWidget(0, filtersSvg,0,Qt::AlignHCenter);
     } else {
         auto *newLayout = new QVBoxLayout(ui->filters);
         newLayout->addWidget(filtersSvg);
@@ -688,6 +808,17 @@ Home::Home(QWidget *parent)
         newLayout_3->addWidget(filtersSvg_3);
         ui->filters_3->setLayout(newLayout_3);
     }
+    // Setup profile icon
+    QSvgWidget *profileIcon1 = new QSvgWidget(":/new/svgs/Group.svg");
+    profileIcon1->setFixedSize(58, 58);
+    QHBoxLayout *profileLayout1 = qobject_cast<QHBoxLayout *>(ui->profile_3->layout());
+    if (profileLayout1) {
+        profileLayout1->insertWidget(0, profileIcon1);
+    } else {
+        auto *newLayout = new QHBoxLayout(ui->profile_3);
+        newLayout->addWidget(profileIcon1);
+        ui->profile_3->setLayout(newLayout);
+    }
 
     QIcon calender_3(":/new/svgs/calender.svg");
     ui->startDate_3->setIcon(calender_3);
@@ -703,6 +834,157 @@ Home::Home(QWidget *parent)
     setupRequestCards();
     setupWorkerCards();
     ui->addRequest->setCursor(Qt::PointingHandCursor);
+
+    setup_request_page();
+    ui->stackedWidget_2->setCurrentIndex(0);
+}
+
+void Home::setup_request_page(){
+    QFrame *mainFrame = ui->stackedWidget_2->widget(2)->findChild<QFrame*>("frame_10");
+    if (mainFrame) {
+        QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
+        profileIcon->setFixedSize(58, 58);
+
+        // Find or create profile_2 widget within mainFrame
+        QWidget *profileWidget = mainFrame->findChild<QWidget*>("profile_2");
+        if (!profileWidget) {
+            profileWidget = new QFrame(mainFrame);
+            profileWidget->setObjectName("profile_2");
+            QHBoxLayout *newLayout = new QHBoxLayout(profileWidget);
+            profileWidget->setLayout(newLayout);
+            mainFrame->layout()->addWidget(profileWidget);
+        }
+
+        QHBoxLayout *profileLayout = qobject_cast<QHBoxLayout *>(profileWidget->layout());
+        if (profileLayout) {
+            profileLayout->insertWidget(0, profileIcon);
+        } else {
+            auto *newLayout = new QHBoxLayout(profileWidget);
+            newLayout->addWidget(profileIcon);
+            profileWidget->setLayout(newLayout);
+        }
+
+        // Ensure mainFrame has a layout if not present
+        if (!mainFrame->layout()) {
+            auto *mainLayout = new QVBoxLayout(mainFrame);
+            mainLayout->addWidget(profileWidget); // Adjust based on where profile_2 should be
+            mainFrame->setLayout(mainLayout);
+        }
+        // Check if RequestContent exists, create if not
+        QFrame *contentFrame = mainFrame->findChild<QFrame*>("RequestContent");
+        if (!contentFrame) {
+            contentFrame = new QFrame(mainFrame);
+            contentFrame->setObjectName("RequestContent");
+            QHBoxLayout *contentLayout = new QHBoxLayout(contentFrame);
+            contentFrame->setLayout(contentLayout);
+            mainFrame->layout()->addWidget(contentFrame);
+        }
+
+        // Setup requestHeader within RequestContent
+        QFrame *headerFrame = contentFrame->findChild<QFrame*>("requestHeader");
+        if (!headerFrame) {
+            headerFrame = new QFrame(contentFrame);
+            headerFrame->setObjectName("requestHeader");
+            QVBoxLayout *headerLayout = new QVBoxLayout(headerFrame);
+            headerFrame->setLayout(headerLayout);
+            contentFrame->layout()->addWidget(headerFrame);
+
+            // Back button
+            QPushButton *backButton = new QPushButton("Back");
+            backButton->setObjectName("backButton");
+            backButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: #E38B29;"
+                "   color: #FFFFFF;"
+                "   border-radius: 5px;"
+                "   font-size: 14px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: #C37422;"
+                "}"
+                );
+            headerLayout->addWidget(backButton);
+
+            // Title label
+            QLabel *titleLabel = new QLabel("Title");
+            titleLabel->setObjectName("requestTitle");
+            titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #E38B29;");
+            headerLayout->addWidget(titleLabel);
+
+            // Date label
+            QLabel *dateLabel = new QLabel("Date");
+            dateLabel->setObjectName("requestDate");
+            dateLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+            headerLayout->addWidget(dateLabel);
+
+            // Address label
+            QLabel *addressLabel = new QLabel("Address");
+            addressLabel->setObjectName("requestAddress");
+            addressLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+            headerLayout->addWidget(addressLabel);
+
+            connect(backButton, &QPushButton::clicked, this, [this]() {
+                ui->stackedWidget_2->setCurrentIndex(0);
+            });
+        }
+
+        // Setup description within RequestContent
+        QFrame *descriptionFrame = contentFrame->findChild<QFrame*>("description");
+        if (!descriptionFrame) {
+            descriptionFrame = new QFrame(contentFrame);
+            descriptionFrame->setObjectName("description");
+            QVBoxLayout *descLayout = new QVBoxLayout(descriptionFrame);
+            descriptionFrame->setLayout(descLayout);
+            QTextEdit *descriptionText = new QTextEdit(descriptionFrame);
+            descriptionText->setObjectName("descriptionText");
+            descriptionText->setReadOnly(true);
+            descriptionText->setStyleSheet(
+                "background-color: #FFD8A9;"
+                "color: #E38B29;"
+                "border-radius: 5px;"
+                "font-size: 14px;"
+                );
+            descLayout->addWidget(descriptionText);
+            contentFrame->layout()->addWidget(descriptionFrame);
+        }
+
+        // Setup tasks within RequestContent
+        QFrame *tasksFrame = contentFrame->findChild<QFrame*>("tasks");
+        if (!tasksFrame) {
+            tasksFrame = new QFrame(contentFrame);
+            tasksFrame->setObjectName("tasks");
+            QVBoxLayout *tasksLayout = new QVBoxLayout(tasksFrame);
+            tasksFrame->setLayout(tasksLayout);
+            QLabel *tasksLabel = new QLabel("Tasks");
+            tasksLabel->setObjectName("tasksLabel");
+            tasksLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
+            tasksLayout->addWidget(tasksLabel);
+            contentFrame->layout()->addWidget(tasksFrame);
+        }
+
+        // Setup workersListFrame
+        QFrame *workersListFrame = mainFrame->findChild<QFrame*>("workersListFrame");
+        if (!workersListFrame) {
+            workersListFrame = new QFrame(mainFrame);
+            workersListFrame->setObjectName("workersListFrame");
+            QVBoxLayout *workersLayout = new QVBoxLayout(workersListFrame);
+            workersListFrame->setLayout(workersLayout);
+            QLabel *workerListLabel = new QLabel("Workers");
+            workerListLabel->setObjectName("workerList");
+            workerListLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
+            workersLayout->addWidget(workerListLabel);
+            mainFrame->layout()->addWidget(workersListFrame);
+
+            // Ensure mainFrame has a layout if not present
+            QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(mainFrame->layout());
+            if (!mainLayout) {
+                mainLayout = new QVBoxLayout(mainFrame);
+                mainFrame->setLayout(mainLayout);
+                mainLayout->addWidget(contentFrame);
+                mainLayout->addWidget(workersListFrame);
+            }
+        }
+    }
 }
 
 Home::~Home()
@@ -865,3 +1147,6 @@ void Home::on_endDate_clicked()
 
     endDateCalendar->show();
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for Request page

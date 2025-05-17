@@ -142,7 +142,7 @@ transition: all 0.3s ease-in-out;
 	border: 1px solid #fff;
 	padding-left:10px;
 	background-color: #FDEEDC;
-
+	color:#E38B29;
 border-radius: 30px;
 }
 
@@ -178,6 +178,9 @@ transition: all 0.3s ease-in-out;
                  <pointsize>15</pointsize>
                 </font>
                </property>
+               <property name="text">
+                <string>john.doe@email.com</string>
+               </property>
                <property name="placeholderText">
                 <string>Email</string>
                </property>
@@ -189,6 +192,9 @@ transition: all 0.3s ease-in-out;
                 <font>
                  <pointsize>15</pointsize>
                 </font>
+               </property>
+               <property name="text">
+                <string>password123</string>
                </property>
                <property name="placeholderText">
                 <string>Password</string>

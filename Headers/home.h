@@ -59,6 +59,8 @@ private:
     QString getWorkersForRequest(int requestId);
     QString getAddressForRequest(int requestId);
 
+    void setup_request_page();
+
     // for workers page
     void loadAllWorkers();
     void setupWorkerCards();
