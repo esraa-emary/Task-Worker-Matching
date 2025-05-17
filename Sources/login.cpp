@@ -29,8 +29,8 @@ void LogIn::on_back_clicked()
 
 void LogIn::on_login_clicked()
 {
-    QString email;
-    QString password;
+    int clientId;
+    QString confirm,overAllFeedback,name,phone,address,email,password;
 
     email = ui->email->text();
     password = ui->password->text();
@@ -50,14 +50,26 @@ void LogIn::on_login_clicked()
         return;
     }
 
-    if (query.next()) {
-        int clientId = query.value("clientID").toInt();
-        QString name = query.value("name").toString();
-        QString address = query.value("address").toString();
-    }
+    clientId = query.value("clientID").toInt();
+    name = query.value("name").toString();
+    address = query.value("address").toString();
+    overAllFeedback = query.value("overAllFeedback").toString();
+    phone = query.value("phone").toString();
 
     QMessageBox::information(this, "Success", "logedin successfully!");
+
+    // send data to home
+    clientData.id = clientId;
+    clientData.name = name;
+    clientData.email = email;
+    clientData.address = address;
+    clientData.phone = phone;
+    clientData.password = password;
+    clientData.feedback = overAllFeedback;
+
     home = new Home(this);
+    home->setClient( clientData.id, clientData.name, clientData.password, clientData.address, clientData.email, clientData.phone, clientData.feedback);
     home->show();
+    this->close();
 }
 

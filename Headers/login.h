@@ -15,18 +15,27 @@ class LogIn : public QMainWindow
 public:
     explicit LogIn(QWidget *parent = nullptr);
     ~LogIn();
+    struct  ClientData {
+        QString name;
+        QString password;
+        QString address;
+        QString email;
+        QString phone;
+        QString feedback;
+        int id;
+    };
 
 signals:
     void backToMainWindow();
 
 private slots:
     void on_back_clicked();
-
     void on_login_clicked();
 
 private:
     Ui::LogIn *ui;
     Home *home;
+    ClientData clientData;
 };
 
 #endif // LOGIN_H

@@ -177,7 +177,7 @@ transition: all 0.3s ease-in-out;
                 </font>
                </property>
                <property name="text">
-                <string>TextLabel</string>
+                <string>Start Date</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -221,7 +221,7 @@ transition: all 0.3s ease-in-out;
                 </font>
                </property>
                <property name="text">
-                <string>TextLabel</string>
+                <string>End Date</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>

@@ -31,14 +31,7 @@ void SignUp::on_back_clicked()
 void SignUp::on_signup_clicked()
 {
     int clientId;
-    QString fName;
-    QString lName;
-    QString name;
-    QString phone;
-    QString address;
-    QString email;
-    QString password;
-    QString confirm;
+    QString confirm,overAllFeedback="",fName,lName,name,phone,address,email,password;
 
     QSqlQuery query1;
     if (!query1.exec("SELECT MAX(clientID) FROM client")) {
@@ -129,7 +122,19 @@ void SignUp::on_signup_clicked()
     }
 
     QMessageBox::information(this, "Success", "signedup successfully!");
+
+    // send data to home
+    clientData.id = clientId;
+    clientData.name = name;
+    clientData.email = email;
+    clientData.address = address;
+    clientData.phone = phone;
+    clientData.password = password;
+    clientData.feedback = overAllFeedback;
+
     home = new Home(this);
+    home->setClient( clientData.id, clientData.name, clientData.password, clientData.address, clientData.email, clientData.phone, clientData.feedback);
     home->show();
+    this->close();
 }
 

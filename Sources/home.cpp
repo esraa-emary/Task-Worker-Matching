@@ -3,6 +3,7 @@
 #include <QSvgWidget>
 #include <QVBoxLayout>
 #include "ui_requesttask.h"
+#include "../Headers/signup.h"
 #include <QDebug>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -21,7 +22,8 @@ bool Home::connectToDatabase()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
 
-    QString serverName = "HEFNY";
+    QString serverName = "DESKTOP-TKK26SO";
+    // QString serverName = "HEFNY";
     QString dbName = "TaskWorkerMatching";
 
     QString connectionString = QString(
@@ -193,19 +195,19 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
 
     // Create the nested horizontal layout for title and date
     QHBoxLayout *titleDateLayout = new QHBoxLayout();
-    titleDateLayout->setSpacing(0);
+    titleDateLayout->setSpacing(0); // No spacing between title and date
     titleDateLayout->setContentsMargins(0, 0, 0, 0);
 
     // Title label
     QLabel *titleLabel = new QLabel(taskName);
     titleLabel->setStyleSheet(
         "font-weight: bold;"
-        "font-size: 14px;"
-        "color: #E38B29;"
+        "font-size: 13px;"
+        "color: #F1A661;"
         "padding: 0px;"
         "margin: 0px;"
         );
-    titleLabel->setMaximumWidth(300);
+    titleLabel->setMaximumWidth(100);
     titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     // Date label
@@ -215,35 +217,33 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
     QLabel *dateLabel = new QLabel(dateString);
     dateLabel->setStyleSheet(
         "font-size: 10px;"
-        "color: #E38B29;"
-        "opacity: 0.4;"
+        "color: #FFD8A9;"
         "padding: 0px;"
+        "padding-left: 2px;"
         "margin: 0px;"
-        "margin-left: 5px;"
-        "padding-top: 10px;"
         );
-    dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+    dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter); // Changed to AlignLeft
 
     // Add title and date to the nested layout
-    titleDateLayout->addWidget(titleLabel,0);
-    titleDateLayout->addWidget(dateLabel,1);
+    titleDateLayout->addWidget(titleLabel); // No stretch to keep them adjacent
+    titleDateLayout->addWidget(dateLabel);
 
     // Address label
     QString address = getAddressForRequest(requestId);
     QLabel *addressLabel = new QLabel();
-    if (address.length() > 40) {
+    if (address.length() > 20) {
         addressLabel->setText(address.left(17) + "...");
         addressLabel->setToolTip(address);
     } else {
         addressLabel->setText(address);
     }
     addressLabel->setStyleSheet(
-        "font-size: 14px;"
-        "color: #E38B29;"
+        "font-size: 10px;"
+        "color: #FFD8A9;"
         "padding: 0px;"
         "margin: 0px;"
         );
-    addressLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    addressLabel->setAlignment(Qt::AlignRight);
 
     // Add to the main layout
     mainLayout->addLayout(titleDateLayout, 4); // Title and date layout gets more space
@@ -251,16 +251,16 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
     mainLayout->addWidget(addressLabel, 3);    // Address gets moderate space
 
     // Workers list - more compact
-    QString workersList = "Workers: " + getWorkersForRequest(requestId);
+    QString workersList = getWorkersForRequest(requestId);
     QLabel *workersLabel = new QLabel(workersList);
     workersLabel->setStyleSheet(
-        "font-size: 12px;"
-        "color: #E38B29;"
+        "font-size: 10px;" // Smaller font
+        "color: #FFD8A9;" // Light orange
         "padding-top: 0px;"
         "margin-top: 0px;"
         );
-    workersLabel->setWordWrap(true);
-    workersLabel->setMaximumHeight(30);
+    workersLabel->setWordWrap(true); // Allow wrapping for long lists
+    workersLabel->setMaximumHeight(20); // Limit height
 
     // Status label with color coding - more compact design
     QLabel *statusLabel = new QLabel(status);
@@ -277,13 +277,13 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
     statusLabel->setStyleSheet(QString(
                                    "background-color: %1;"
                                    "color: #FFFFFF;"
-                                   "border-radius: 15px;"
+                                   "border-radius: 8px;"
                                    "padding: 2px 8px;"
                                    "font-weight: bold;"
-                                   "font-size: 14px;"
+                                   "font-size: 10px;"
                                    ).arg(statusColor));
-    statusLabel->setMaximumHeight(30);
-    statusLabel->setMaximumWidth(100);
+    statusLabel->setMaximumHeight(18);
+    statusLabel->setMaximumWidth(80);
 
     // Status row with horizontal layout - more compact
     QHBoxLayout *statusRow = new QHBoxLayout();
@@ -292,18 +292,43 @@ QFrame* Home::createRequestCard(int clientId, int requestId, const QString &task
     statusRow->addWidget(statusLabel);
     statusRow->addStretch();
 
+    // View details button - more compact
+    QPushButton *viewButton = new QPushButton("Details");
+    viewButton->setCursor(Qt::PointingHandCursor);
+    viewButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: #E38B29;" // Dark orange
+        "   color: #FFFFFF;"
+        "   border: none;"
+        "   border-radius: 5px;"
+        "   padding: 2px 8px;"
+        "   font-size: 10px;"
+        "   max-height: 18px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #C37422;" // Darker orange
+        "}"
+        );
+    viewButton->setMaximumWidth(60);
+    statusRow->addWidget(viewButton);
+
     // Add layouts to main card layout - more compact overall structure
     cardLayout->addLayout(mainLayout);
     cardLayout->addWidget(workersLabel);
     cardLayout->addLayout(statusRow);
 
     // Set fixed height for the card to make it more compact
-    card->setFixedHeight(120);
+    card->setFixedHeight(90);
 
     // Make the entire card clickable
     card->setCursor(Qt::PointingHandCursor);
     card->installEventFilter(this);
     card->setProperty("requestId", requestId);
+
+    // Connect the view button click
+    connect(viewButton, &QPushButton::clicked, this, [this, requestId]() {
+        this->viewRequestDetails(requestId);
+    });
 
     return card;
 }
@@ -354,19 +379,19 @@ void Home::viewRequestDetails(int requestId)
         requestTime.setTimeZone(QTimeZone("Europe/Athens")); // Adjust for EEST
         QString description = query.value("REQUESTDESCRIPTION").toString();
 
+        // Format the date
         QString dateString = requestTime.isValid() ? QLocale().toString(requestTime, "yyyy-MM-dd hh:mm ap") : "Unknown";
 
+        // Find the main frame (frame_10)
         QFrame *mainFrame = requestPage->findChild<QFrame*>("frame_10");
         if (mainFrame) {
+            // Find the RequestContent frame inside frame_10
             QFrame *contentFrame = mainFrame->findChild<QFrame*>("RequestContent");
             if (contentFrame) {
+                // Populate requestHeader frame
                 QFrame *headerFrame = contentFrame->findChild<QFrame*>("requestHeader");
                 if (headerFrame) {
-                    QHBoxLayout *headerLayout = qobject_cast<QHBoxLayout*>(headerFrame->layout());
-                    if (!headerLayout) {
-                        headerLayout = new QHBoxLayout(headerFrame);
-                        headerFrame->setLayout(headerLayout);
-                    }
+                    // Check if back button exists, if not, add it with SVG
                     QPushButton *backButton = headerFrame->findChild<QPushButton*>("backButton");
                     if (!backButton) {
                         backButton = new QPushButton(headerFrame);
@@ -374,175 +399,119 @@ void Home::viewRequestDetails(int requestId)
                         backButton->setStyleSheet(
                             "QPushButton {"
                             "   background-color: #E38B29;"
-                            "   border-radius: 22px;"
+                            "   border-radius: 5px;"
                             "}"
                             "QPushButton:hover {"
                             "   background-color: #C37422;"
                             "}"
                             );
-                        backButton->setIcon(QIcon(":/new/svgs/back.svg"));
-                        backButton->setIconSize(QSize(25, 27));
-                        backButton->setFixedSize(50, 44);
-                        backButton->setCursor(Qt::PointingHandCursor);
+                        QSvgWidget *svgWidget = new QSvgWidget(":/new/svgs/back.svg", backButton);
+                        backButton->setIcon(QIcon(svgWidget->grab()));
+                        backButton->setIconSize(QSize(50, 38));
+                        backButton->setFixedSize(50, 38);
+                        QHBoxLayout *headerLayout = qobject_cast<QHBoxLayout*>(headerFrame->layout());
+                        if (!headerLayout) {
+                            headerLayout = new QHBoxLayout(headerFrame);
+                            headerFrame->setLayout(headerLayout);
+                        }
                         headerLayout->insertWidget(0, backButton);
                         connect(backButton, &QPushButton::clicked, this, [this]() {
-                            ui->stackedWidget_2->setCurrentIndex(0);
+                            ui->stackedWidget_2->setCurrentIndex(0); // Back to Requests page
                         });
                     }
 
-
+                    // Create a frame for title and date
                     QFrame *titleDateFrame = headerFrame->findChild<QFrame*>("titleDateFrame");
-                    QHBoxLayout *titleDateLayout;
                     if (!titleDateFrame) {
                         titleDateFrame = new QFrame(headerFrame);
                         titleDateFrame->setObjectName("titleDateFrame");
-                        titleDateLayout = new QHBoxLayout(titleDateFrame);
+                        QHBoxLayout *titleDateLayout = new QHBoxLayout(titleDateFrame);
                         titleDateFrame->setLayout(titleDateLayout);
-                        titleDateLayout->setSpacing(0);
-                        if (headerLayout) {
-                            headerLayout->addWidget(titleDateFrame,0);
-                        }
-
-                    }else{
-                        titleDateLayout = qobject_cast<QHBoxLayout*>(titleDateFrame->layout());
+                        titleDateLayout->setSpacing(5); // Minimal spacing between title and date
+                        headerFrame->layout()->addWidget(titleDateFrame);
                     }
 
+                    // Title label
                     QLabel *titleLabel = titleDateFrame->findChild<QLabel*>("requestTitle");
                     if (!titleLabel) {
                         titleLabel = new QLabel(titleDateFrame);
                         titleLabel->setObjectName("requestTitle");
                         titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #E38B29;");
-                        titleLabel->setMaximumWidth(500);
-
-                        QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-
-                        titleLabel->setSizePolicy(sizePolicy);
-
-                        titleDateLayout->addWidget(titleLabel,0);
+                        titleDateFrame->layout()->addWidget(titleLabel);
                     }
                     titleLabel->setText(taskName);
 
+                    // Date label
                     QLabel *dateLabel = titleDateFrame->findChild<QLabel*>("requestDate");
                     if (!dateLabel) {
                         dateLabel = new QLabel(titleDateFrame);
                         dateLabel->setObjectName("requestDate");
-                        dateLabel->setStyleSheet("font-size: 12px; color: #F1A661; opacity: 0.3; padding-left:2px;padding-top:15px;");
-                        dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
-                        titleDateLayout->addWidget(dateLabel,1);
+                        dateLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+                        titleDateFrame->layout()->addWidget(dateLabel);
                     }
                     dateLabel->setText(dateString);
 
+                    // Address label
                     QLabel *addressLabel = headerFrame->findChild<QLabel*>("requestAddress");
                     if (!addressLabel) {
                         addressLabel = new QLabel(headerFrame);
                         addressLabel->setObjectName("requestAddress");
                         addressLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
                         headerFrame->layout()->addWidget(addressLabel);
-                        addressLabel->setAlignment(Qt::AlignRight | Qt::AlignCenter);
                     }
                     addressLabel->setText(address);
                 }
 
+                // Populate tasks frame
                 QFrame *tasksFrame = contentFrame->findChild<QFrame*>("tasks");
                 if (tasksFrame) {
-                    QHBoxLayout *layout = qobject_cast<QHBoxLayout*>(tasksFrame->layout());
-                    if (!layout) {
-                        layout = new QHBoxLayout(tasksFrame);
-                        tasksFrame->setLayout(layout);
-                    }
-
-                    QLabel *taskTitleLabel = tasksFrame->findChild<QLabel*>("taskTitleLabel");
-                    if (!taskTitleLabel) {
-                        taskTitleLabel = new QLabel(tasksFrame);
-                        taskTitleLabel->setObjectName("taskTitleLabel");
-                        taskTitleLabel->setStyleSheet("font-weight: bold; font-size: 20px; color: #E38B29;");
-                        layout->insertWidget(0, taskTitleLabel);
-                    }
-                    taskTitleLabel->setText("Tasks ");
-
                     QLabel *tasksLabel = tasksFrame->findChild<QLabel*>("tasksLabel");
                     if (!tasksLabel) {
                         tasksLabel = new QLabel(tasksFrame);
                         tasksLabel->setObjectName("tasksLabel");
-                        tasksLabel->setStyleSheet("font-size: 16px; color: #E38B29;");
-                        tasksLabel->setAlignment(Qt::AlignVCenter);
+                        tasksLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
+                        QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(tasksFrame->layout());
+                        if (!layout) {
+                            layout = new QVBoxLayout(tasksFrame);
+                            tasksFrame->setLayout(layout);
+                        }
                         layout->addWidget(tasksLabel);
                     }
                     tasksLabel->setText(taskName);
                 }
 
-
                 // Populate description frame
                 QFrame *descriptionFrame = contentFrame->findChild<QFrame*>("description");
                 if (descriptionFrame) {
-                    QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(descriptionFrame->layout());
-                    if (!layout) {
-                        layout = new QVBoxLayout(descriptionFrame);
-                        descriptionFrame->setLayout(layout);
-                    }
-
-                    QLabel *descriptionTitle = descriptionFrame->findChild<QLabel*>("descriptionTitle");
-                    if (!descriptionTitle) {
-                        descriptionTitle = new QLabel("Description", descriptionFrame);
-                        descriptionTitle->setObjectName("descriptionTitle");
-                        descriptionTitle->setStyleSheet(
-                            "color: #E38B29;"
-                            "font-size: 20px;"
-                            "font-weight: bold;"
-                            );
-                        layout->addWidget(descriptionTitle);
-                    }
-
-                    // Check if the QTextEdit already exists
                     QTextEdit *descriptionText = descriptionFrame->findChild<QTextEdit*>("descriptionText");
                     if (!descriptionText) {
                         descriptionText = new QTextEdit(descriptionFrame);
                         descriptionText->setObjectName("descriptionText");
                         descriptionText->setReadOnly(true);
                         descriptionText->setStyleSheet(
-                            "background-color: transparent;"
+                            "background-color: #FFD8A9;"
                             "color: #E38B29;"
                             "border-radius: 5px;"
-                            "font-size: 16px;"
+                            "font-size: 14px;"
                             );
+                        QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(descriptionFrame->layout());
+                        if (!layout) {
+                            layout = new QVBoxLayout(descriptionFrame);
+                            descriptionFrame->setLayout(layout);
+                        }
                         layout->addWidget(descriptionText);
                     }
-
                     descriptionText->setText(description.isEmpty() ? "No description provided" : description);
                 }
             }
 
+            // Populate workers list (directly under frame_10)
             QFrame *workersListFrame = mainFrame->findChild<QFrame*>("workersListFrame");
-            if (!workersListFrame) {
-                workersListFrame = new QFrame(mainFrame);
-                workersListFrame->setObjectName("workersListFrame");
-
-                QVBoxLayout *workersLayout = new QVBoxLayout(workersListFrame);
-                workersListFrame->setLayout(workersLayout);
-
-                QLabel *workerListLabel = new QLabel("Workers");
-                workerListLabel->setObjectName("workerList");
-                workerListLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
-                workersLayout->addWidget(workerListLabel);
-
-                // Example: Adding worker names (replace with your actual worker list)
-                QStringList workerList = {"Alice", "Bob", "Charlie"};
-                for (const QString &workerName : workerList) {
-                    QLabel *label = new QLabel(workerName);
-                    label->setStyleSheet("color: #FDEEDC; background: #E38B29; border-radius: 8px; font-size: 14px; padding: 4px;");
-                    workersLayout->addWidget(label);
-                }
-
-                // Add vertical spacer at the end to push everything above upwards
-                workersLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
-
-                // Ensure mainFrame has a layout if not present
-                QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(mainFrame->layout());
-                if (!mainLayout) {
-                    mainLayout = new QVBoxLayout(mainFrame);
-                    mainFrame->setLayout(mainLayout);
-                    mainLayout->addWidget(contentFrame);
-                    mainLayout->addWidget(workersListFrame);
+            if (workersListFrame) {
+                QLabel *workerListLabel = workersListFrame->findChild<QLabel*>("workerList");
+                if (workerListLabel) {
+                    QString workers = getWorkersForRequest(requestId);
+                    workerListLabel->setText(workers.isEmpty() ? "None" : workers);
                 }
             }
         }
@@ -777,7 +746,160 @@ QFrame* Home::createWorkerCard(int workerId, QString &taskName,
 
 void Home::setupWorkerCards()
 {
-    loadAllWorkers();
+    if (connectToDatabase()) {
+        loadAllWorkers();
+    } else {
+        QMessageBox::critical(this, "Database Connection Error",
+                              "Failed to connect to the database.");
+    }
+}
+
+void Home::setup_request_page(){
+    QFrame *mainFrame = ui->stackedWidget_2->widget(2)->findChild<QFrame*>("frame_10");
+    if (mainFrame) {
+        QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
+        profileIcon->setFixedSize(58, 58);
+
+        // Find or create profile_2 widget within mainFrame
+        QWidget *profileWidget = mainFrame->findChild<QWidget*>("profile_2");
+        if (!profileWidget) {
+            profileWidget = new QFrame(mainFrame);
+            profileWidget->setObjectName("profile_2");
+            QHBoxLayout *newLayout = new QHBoxLayout(profileWidget);
+            profileWidget->setLayout(newLayout);
+            mainFrame->layout()->addWidget(profileWidget);
+        }
+
+        QHBoxLayout *profileLayout = qobject_cast<QHBoxLayout *>(profileWidget->layout());
+        if (profileLayout) {
+            profileLayout->insertWidget(0, profileIcon);
+        } else {
+            auto *newLayout = new QHBoxLayout(profileWidget);
+            newLayout->addWidget(profileIcon);
+            profileWidget->setLayout(newLayout);
+        }
+
+        // Ensure mainFrame has a layout if not present
+        if (!mainFrame->layout()) {
+            auto *mainLayout = new QVBoxLayout(mainFrame);
+            mainLayout->addWidget(profileWidget); // Adjust based on where profile_2 should be
+            mainFrame->setLayout(mainLayout);
+        }
+        // Check if RequestContent exists, create if not
+        QFrame *contentFrame = mainFrame->findChild<QFrame*>("RequestContent");
+        if (!contentFrame) {
+            contentFrame = new QFrame(mainFrame);
+            contentFrame->setObjectName("RequestContent");
+            QHBoxLayout *contentLayout = new QHBoxLayout(contentFrame);
+            contentFrame->setLayout(contentLayout);
+            mainFrame->layout()->addWidget(contentFrame);
+        }
+
+        // Setup requestHeader within RequestContent
+        QFrame *headerFrame = contentFrame->findChild<QFrame*>("requestHeader");
+        if (!headerFrame) {
+            headerFrame = new QFrame(contentFrame);
+            headerFrame->setObjectName("requestHeader");
+            QVBoxLayout *headerLayout = new QVBoxLayout(headerFrame);
+            headerFrame->setLayout(headerLayout);
+            contentFrame->layout()->addWidget(headerFrame);
+
+            // Back button
+            QPushButton *backButton = new QPushButton("Back");
+            backButton->setObjectName("backButton");
+            backButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: #E38B29;"
+                "   color: #FFFFFF;"
+                "   border-radius: 5px;"
+                "   font-size: 14px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: #C37422;"
+                "}"
+                );
+            headerLayout->addWidget(backButton);
+
+            // Title label
+            QLabel *titleLabel = new QLabel("Title");
+            titleLabel->setObjectName("requestTitle");
+            titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #E38B29;");
+            headerLayout->addWidget(titleLabel);
+
+            // Date label
+            QLabel *dateLabel = new QLabel("Date");
+            dateLabel->setObjectName("requestDate");
+            dateLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+            headerLayout->addWidget(dateLabel);
+
+            // Address label
+            QLabel *addressLabel = new QLabel("Address");
+            addressLabel->setObjectName("requestAddress");
+            addressLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
+            headerLayout->addWidget(addressLabel);
+
+            connect(backButton, &QPushButton::clicked, this, [this]() {
+                ui->stackedWidget_2->setCurrentIndex(0);
+            });
+        }
+
+        // Setup description within RequestContent
+        QFrame *descriptionFrame = contentFrame->findChild<QFrame*>("description");
+        if (!descriptionFrame) {
+            descriptionFrame = new QFrame(contentFrame);
+            descriptionFrame->setObjectName("description");
+            QVBoxLayout *descLayout = new QVBoxLayout(descriptionFrame);
+            descriptionFrame->setLayout(descLayout);
+            QTextEdit *descriptionText = new QTextEdit(descriptionFrame);
+            descriptionText->setObjectName("descriptionText");
+            descriptionText->setReadOnly(true);
+            descriptionText->setStyleSheet(
+                "background-color: #FFD8A9;"
+                "color: #E38B29;"
+                "border-radius: 5px;"
+                "font-size: 14px;"
+                );
+            descLayout->addWidget(descriptionText);
+            contentFrame->layout()->addWidget(descriptionFrame);
+        }
+
+        // Setup tasks within RequestContent
+        QFrame *tasksFrame = contentFrame->findChild<QFrame*>("tasks");
+        if (!tasksFrame) {
+            tasksFrame = new QFrame(contentFrame);
+            tasksFrame->setObjectName("tasks");
+            QVBoxLayout *tasksLayout = new QVBoxLayout(tasksFrame);
+            tasksFrame->setLayout(tasksLayout);
+            QLabel *tasksLabel = new QLabel("Tasks");
+            tasksLabel->setObjectName("tasksLabel");
+            tasksLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
+            tasksLayout->addWidget(tasksLabel);
+            contentFrame->layout()->addWidget(tasksFrame);
+        }
+
+        // Setup workersListFrame
+        QFrame *workersListFrame = mainFrame->findChild<QFrame*>("workersListFrame");
+        if (!workersListFrame) {
+            workersListFrame = new QFrame(mainFrame);
+            workersListFrame->setObjectName("workersListFrame");
+            QVBoxLayout *workersLayout = new QVBoxLayout(workersListFrame);
+            workersListFrame->setLayout(workersLayout);
+            QLabel *workerListLabel = new QLabel("Workers");
+            workerListLabel->setObjectName("workerList");
+            workerListLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
+            workersLayout->addWidget(workerListLabel);
+            mainFrame->layout()->addWidget(workersListFrame);
+
+            // Ensure mainFrame has a layout if not present
+            QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(mainFrame->layout());
+            if (!mainLayout) {
+                mainLayout = new QVBoxLayout(mainFrame);
+                mainFrame->setLayout(mainLayout);
+                mainLayout->addWidget(contentFrame);
+                mainLayout->addWidget(workersListFrame);
+            }
+        }
+    }
 }
 
 Home::Home(QWidget *parent)
@@ -786,7 +908,7 @@ Home::Home(QWidget *parent)
     , requestTask(nullptr)
 {
     ui->setupUi(this);
-    // Setup profile icon
+    // Setup profile icon in requests
     QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
     profileIcon->setFixedSize(58, 58);
     QHBoxLayout *profileLayout = qobject_cast<QHBoxLayout *>(ui->profile->layout());
@@ -868,167 +990,20 @@ Home::Home(QWidget *parent)
     setupWorkerCards();
     ui->addRequest->setCursor(Qt::PointingHandCursor);
 
+    // Setup profile icon in profile
+    QSvgWidget *profileIcon2 = new QSvgWidget(":/new/svgs/Group.svg");
+    profileIcon2->setFixedSize(58, 58);
+    QHBoxLayout *profileLayout2 = qobject_cast<QHBoxLayout *>(ui->profile_4->layout());
+    if (profileLayout2) {
+        profileLayout2->insertWidget(0, profileIcon2);
+    } else {
+        auto *newLayout = new QHBoxLayout(ui->profile_4);
+        newLayout->addWidget(profileIcon2);
+        ui->profile_2->setLayout(newLayout);
+    }
+
     setup_request_page();
     ui->stackedWidget_2->setCurrentIndex(0);
-}
-
-void Home::setup_request_page(){
-    QFrame *mainFrame = ui->stackedWidget_2->widget(2)->findChild<QFrame*>("frame_10");
-    if (mainFrame) {
-        QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
-        profileIcon->setFixedSize(58, 58);
-
-        // Find or create profile_2 widget within mainFrame
-        QWidget *profileWidget = mainFrame->findChild<QWidget*>("profile_2");
-        if (!profileWidget) {
-            profileWidget = new QFrame(mainFrame);
-            profileWidget->setObjectName("profile_2");
-            QHBoxLayout *newLayout = new QHBoxLayout(profileWidget);
-            profileWidget->setLayout(newLayout);
-            mainFrame->layout()->addWidget(profileWidget);
-        }
-
-        QHBoxLayout *profileLayout = qobject_cast<QHBoxLayout *>(profileWidget->layout());
-        if (profileLayout) {
-            profileLayout->insertWidget(0, profileIcon);
-        } else {
-            auto *newLayout = new QHBoxLayout(profileWidget);
-            newLayout->addWidget(profileIcon);
-            profileWidget->setLayout(newLayout);
-        }
-
-        // Ensure mainFrame has a layout if not present
-        if (!mainFrame->layout()) {
-            auto *mainLayout = new QVBoxLayout(mainFrame);
-            mainLayout->addWidget(profileWidget); // Adjust based on where profile_2 should be
-            mainFrame->setLayout(mainLayout);
-        }
-        // Check if RequestContent exists, create if not
-        QFrame *contentFrame = mainFrame->findChild<QFrame*>("RequestContent");
-        if (!contentFrame) {
-            contentFrame = new QFrame(mainFrame);
-            contentFrame->setObjectName("RequestContent");
-            QHBoxLayout *contentLayout = new QHBoxLayout(contentFrame);
-            contentFrame->setLayout(contentLayout);
-            mainFrame->layout()->addWidget(contentFrame);
-        }
-
-        // Setup requestHeader within RequestContent
-        QFrame *headerFrame = contentFrame->findChild<QFrame*>("requestHeader");
-        if (!headerFrame) {
-            headerFrame = new QFrame(contentFrame);
-            headerFrame->setObjectName("requestHeader");
-            QVBoxLayout *headerLayout = qobject_cast<QVBoxLayout *>(headerFrame->layout());
-            if (!headerLayout) {
-                headerLayout = new QVBoxLayout(headerFrame);
-                headerFrame->setLayout(headerLayout);
-            }
-            contentFrame->layout()->addWidget(headerFrame);
-
-            // Back button
-            QPushButton *backButton = new QPushButton("Back");
-            backButton->setObjectName("backButton");
-            backButton->setStyleSheet(
-                "QPushButton {"
-                "   background-color: #E38B29;"
-                "   border-radius: 22px;"
-                "}"
-                "QPushButton:hover {"
-                "   background-color: #C37422;"
-                "}"
-                );
-            backButton->setIcon(QIcon(":/new/svgs/back.svg"));
-            backButton->setIconSize(QSize(25, 27));
-            backButton->setFixedSize(50, 44);
-            backButton->setCursor(Qt::PointingHandCursor);
-            headerLayout->addWidget(backButton);
-
-
-            // Title label
-            QLabel *titleLabel = new QLabel("Title");
-            titleLabel->setObjectName("requestTitle");
-            titleLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #E38B29;");
-             titleLabel->setMaximumWidth(500);
-            QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-            titleLabel->setSizePolicy(sizePolicy);
-            headerLayout->addWidget(titleLabel,0);
-
-            // Date label
-            QLabel *dateLabel = new QLabel("Date");
-            dateLabel->setObjectName("requestDate");
-            dateLabel->setStyleSheet("font-size: 16px; color: #F1A661; opacity: 0.6; padding-left:5px");
-            dateLabel->setAlignment(Qt::AlignBottom);
-            headerLayout->addWidget(dateLabel,1);
-
-            // Address label
-            QLabel *addressLabel = new QLabel("Address");
-            addressLabel->setObjectName("requestAddress");
-            addressLabel->setStyleSheet("font-size: 16px; color: #F1A661;");
-            headerLayout->addWidget(addressLabel,1);
-
-            connect(backButton, &QPushButton::clicked, this, [this]() {
-                ui->stackedWidget_2->setCurrentIndex(0);
-            });
-        }
-
-        // Setup description within RequestContent
-        QFrame *descriptionFrame = contentFrame->findChild<QFrame*>("description");
-        if (!descriptionFrame) {
-            descriptionFrame = new QFrame(contentFrame);
-            descriptionFrame->setObjectName("description");
-            QVBoxLayout *descLayout = new QVBoxLayout(descriptionFrame);
-            descriptionFrame->setLayout(descLayout);
-            QTextEdit *descriptionText = new QTextEdit(descriptionFrame);
-            descriptionText->setObjectName("descriptionText");
-            descriptionText->setReadOnly(true);
-            descriptionText->setStyleSheet(
-                "background-color: #FFD8A9;"
-                "color: #E38B29;"
-                "border-radius: 5px;"
-                "font-size: 14px;"
-                );
-            descLayout->addWidget(descriptionText);
-            contentFrame->layout()->addWidget(descriptionFrame);
-        }
-
-        // Setup tasks within RequestContent
-        QFrame *tasksFrame = contentFrame->findChild<QFrame*>("tasks");
-        if (!tasksFrame) {
-            tasksFrame = new QFrame(contentFrame);
-            tasksFrame->setObjectName("tasks");
-            QVBoxLayout *tasksLayout = new QVBoxLayout(tasksFrame);
-            tasksFrame->setLayout(tasksLayout);
-            QLabel *tasksLabel = new QLabel("Tasks");
-            tasksLabel->setObjectName("tasksLabel");
-            tasksLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
-            tasksLayout->addWidget(tasksLabel);
-            contentFrame->layout()->addWidget(tasksFrame);
-        }
-
-        QFrame *workersListFrame = mainFrame->findChild<QFrame*>("workersListFrame");
-        if (!workersListFrame) {
-            workersListFrame = new QFrame(mainFrame);
-            workersListFrame->setObjectName("workersListFrame");
-
-            QVBoxLayout *workersLayout = new QVBoxLayout(workersListFrame);
-            workersListFrame->setLayout(workersLayout);
-
-            QLabel *workerListLabel = new QLabel("Workers");
-            workerListLabel->setObjectName("workerList");
-            workerListLabel->setStyleSheet("font-size: 14px; color: #FFD8A9;");
-            workersLayout->addWidget(workerListLabel);
-            workersLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
-
-            QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(mainFrame->layout());
-            if (!mainLayout) {
-                mainLayout = new QVBoxLayout(mainFrame);
-                mainFrame->setLayout(mainLayout);
-                mainLayout->addWidget(contentFrame);
-                mainLayout->addWidget(workersListFrame);
-            }
-        }
-
-    }
 }
 
 Home::~Home()
@@ -1044,9 +1019,31 @@ Home::~Home()
         endDateCalendar = nullptr;
     }
 
+    ui->name->setEnabled(false);
+    ui->phone->setEnabled(false);
+    ui->password->setEnabled(false);
+    ui->email->setEnabled(false);
+    ui->address->setEnabled(false);
+
+    ui->update->setEnabled(false);
+
     delete ui;
     delete requestTask;
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for Request page
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for buttons
 
 void Home::on_workersPageBtn_clicked()
 {
@@ -1073,6 +1070,7 @@ void Home::on_requestsPageBtn_2_clicked()
 void Home::on_addRequest_clicked()
 {
     requestTask = new RequestTask(this);
+    requestTask->setClient( clientData.id, clientData.name, clientData.password, clientData.address, clientData.email, clientData.phone,clientData.feedback);
     requestTask->show();
     this->hide();
 }
@@ -1192,11 +1190,219 @@ void Home::on_endDate_clicked()
     endDateCalendar->show();
 }
 
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------
-// for Request page
+void Home::on_requestsPageBtn_4_clicked()
+{
+    QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
+
+    if (requestsPage) {
+        ui->stackedWidget_2->setCurrentWidget(requestsPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_workersPageBtn_4_clicked()
+{
+    QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
+
+    if (workersPage) {
+        ui->stackedWidget_2->setCurrentWidget(workersPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
 
 void Home::on_workersPageBtn_3_clicked()
 {
-    ui->stackedWidget_2->setCurrentIndex(1);
+    QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
+
+    if (workersPage) {
+        ui->stackedWidget_2->setCurrentWidget(workersPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_requestsPageBtn_3_clicked()
+{
+    QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
+
+    if (requestsPage) {
+        ui->stackedWidget_2->setCurrentWidget(requestsPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::loadDataInProfile() {
+    QSqlQuery query;
+    query.prepare("SELECT * FROM client WHERE ClientID = :clientId");
+    query.bindValue(":clientId", clientData.id);
+
+    if (!query.exec()) {
+        qDebug() << "Query error:" << query.lastError().text();
+        return;
+    }
+
+    if (!query.next()) {
+        qDebug() << "No client found with ID:" << clientData.id;
+        return;
+    }
+
+    clientData.name = query.value("name").toString();
+    clientData.address = query.value("address").toString();
+    clientData.feedback = query.value("overAllFeedback").toString();
+    clientData.phone = query.value("phone").toString();
+    clientData.email = query.value("email").toString();
+    clientData.password = query.value("password").toString();
+
+    ui->name->setText(clientData.name);
+    ui->phone->setText(clientData.phone);
+    ui->password->setText(clientData.password);
+    ui->email->setText(clientData.email);
+    ui->address->setText(clientData.address);
+    ui->feedback->setText(clientData.feedback);
+
+    // put data into profile;
+    ui->pushButton_2->setText(clientData.name);
+    ui->pushButton_3->setText(clientData.name);
+    ui->pushButton_4->setText(clientData.name);
+    ui->pushButton_5->setText(clientData.name);
+}
+
+// for profile page
+void Home::on_pushButton_5_clicked()
+{
+    QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+
+    if (profilePage) {
+        ui->stackedWidget_2->setCurrentWidget(profilePage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_pushButton_4_clicked()
+{
+    QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+
+    if (profilePage) {
+        ui->stackedWidget_2->setCurrentWidget(profilePage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_pushButton_2_clicked()
+{
+    QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+
+    if (profilePage) {
+        ui->stackedWidget_2->setCurrentWidget(profilePage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_pushButton_3_clicked()
+{
+    QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+
+    if (profilePage) {
+        ui->stackedWidget_2->setCurrentWidget(profilePage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_edit_clicked()
+{
+    ui->name->setEnabled(true);
+    ui->phone->setEnabled(true);
+    ui->password->setEnabled(true);
+    ui->email->setEnabled(true);
+    ui->address->setEnabled(true);
+
+    ui->update->setEnabled(true);
+}
+
+void Home::on_update_clicked()
+{
+    int clientId = clientData.id;
+
+    QString name,phone,password,email,address;
+    name = ui->name->text();
+    phone = ui->phone->text();
+    password = ui->password->text();
+    email = ui->email->text();
+    address = ui->address->text();
+
+    if (name.isEmpty() || phone.isEmpty() ||password.isEmpty() ||email.isEmpty() ||address.isEmpty()){
+        QMessageBox::information(this, "Error", "Feilds is empty!");
+        return;
+    }
+
+    QSqlQuery query2;
+    query2.prepare("SELECT email FROM client WHERE email = :email AND clientID != :currentId");
+    query2.bindValue(":email", email);
+    query2.bindValue(":currentId", clientData.id);
+
+    if (!query2.exec()) {
+        QMessageBox::critical(this, "Error", "Database error: " + query2.lastError().text());
+        return;
+    }
+
+    // If any rows are returned, the email exists for another client
+    if (query2.next()) {
+        QMessageBox::warning(this, "Email Exists",
+                             "This email is already registered by another account.");
+        return;
+    }
+
+    // Email format
+    QRegularExpression emailRegex(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
+    if (!emailRegex.match(email).hasMatch() || email.isEmpty()) {
+        QMessageBox::warning(this, "Invalid Email", "Please enter a valid email address.");
+        return;
+    }
+
+    // Phone must be digits only
+    QRegularExpression phoneRegex(R"(^\d+$)");
+    if (!phoneRegex.match(phone).hasMatch() || phone.isEmpty()) {
+        QMessageBox::warning(this, "Invalid Phone", "Phone number must contain digits only.");
+        return;
+    }
+
+    QSqlQuery query;
+    query.prepare("UPDATE client SET name = :name , phone = :phone , address = :address , email = :email , password = :password WHERE clientId = :clientId");
+    query.bindValue(":name", name);
+    query.bindValue(":phone", phone);
+    query.bindValue(":password", password);
+    query.bindValue(":email", email);
+    query.bindValue(":address", address);
+    query.bindValue(":clientId", clientId);
+
+    if (!query.exec()) {
+        QMessageBox::critical(this, "Error", "Update failed: " + query.lastError().text());
+        return;
+    } else {
+        QMessageBox::information(this, "Success", "Updated successfully!");
+    }
+
+    ui->name->setEnabled(false);
+    ui->phone->setEnabled(false);
+    ui->password->setEnabled(false);
+    ui->email->setEnabled(false);
+    ui->address->setEnabled(false);
+
+    ui->update->setEnabled(false);
 }
 

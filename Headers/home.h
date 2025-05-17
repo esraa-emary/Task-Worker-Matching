@@ -9,6 +9,7 @@
 #include <QDate>
 #include <QDateEdit>
 #include <QCalendarWidget>
+#include "ui_home.h"
 
 namespace Ui {
 class Home;
@@ -21,6 +22,31 @@ class Home : public QMainWindow
 public:
     explicit Home(QWidget *parent = nullptr);
     ~Home();
+    struct  ClientData {
+        QString name;
+        QString password;
+        QString address;
+        QString email;
+        QString phone;
+        QString feedback;
+        int id;
+    };
+    void setClient(int &id,QString &name,QString &password,QString &address,QString &email,QString &phone,QString &feedback)
+    {
+        clientData.id = id;
+        clientData.name = name;
+        clientData.password = password;
+        clientData.address = address;
+        clientData.email = email;
+        clientData.phone = phone;
+        clientData.feedback = feedback;
+
+        // put data into profile;
+        ui->pushButton_2->setText(clientData.name);
+        ui->pushButton_3->setText(clientData.name);
+        ui->pushButton_4->setText(clientData.name);
+        ui->pushButton_5->setText(clientData.name);
+    }
 
 signals:
     void backToMainWindow();
@@ -37,10 +63,21 @@ private slots:
     void onStartDateSelected(const QDate &date);
     void onEndDateSelected(const QDate &date);
     void on_filterName_clicked();
-
+    void on_requestsPageBtn_4_clicked();
+    void on_workersPageBtn_4_clicked();
     void on_workersPageBtn_3_clicked();
+    void on_requestsPageBtn_3_clicked();
+    void on_pushButton_5_clicked();
+    void on_pushButton_4_clicked();
+    void on_pushButton_2_clicked();
+    void on_pushButton_3_clicked();
+    void on_edit_clicked();
+    void on_update_clicked();
 
 private:
+    ClientData clientData;
+    void loadDataInProfile();
+
     QDate startDateValue = QDate(2000, 1, 1);
     QDate endDateValue = QDate::currentDate();
     Ui::Home *ui;

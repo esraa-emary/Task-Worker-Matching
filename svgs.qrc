@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/new/svgs">
-        <file>back.svg</file>
-        <file>Group.svg</file>
-        <file>Frame 10.svg</file>
-        <file>calender.svg</file>
-    </qresource>
-</RCC>

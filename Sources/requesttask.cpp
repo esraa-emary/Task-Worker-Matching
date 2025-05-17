@@ -1,5 +1,6 @@
 #include "headers/requesttask.h"
 #include "ui_requesttask.h"
+#include "../Headers/home.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -113,9 +114,9 @@ void RequestTask::on_add_clicked()
                   ":requestTime, :preferredTimeSlot, :description)");
 
     query.bindValue(":requestId", requestId);
-    query.bindValue(":clientId", 1);
+    query.bindValue(":clientId", clientData.id);
     query.bindValue(":taskId", taskId);
-    query.bindValue(":address", "");
+    query.bindValue(":address", clientData.address);
     query.bindValue(":requestTime", QDateTime::currentDateTime());
     query.bindValue(":preferredTimeSlot", preferredTimeSlots);
     query.bindValue(":description", description);
