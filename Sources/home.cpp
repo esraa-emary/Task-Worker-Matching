@@ -346,8 +346,6 @@ bool Home::eventFilter(QObject *watched, QEvent *event)
 
 void Home::viewRequestDetails(int requestId)
 {
-    qDebug() << "Viewing details for request ID:" << requestId;
-
     QSqlQuery query;
     query.prepare(
         "SELECT r.CLIENTID, r.TASKID, t.TASKNAME, r.ADDRESS, r.REQUESTTIME, r.REQUESTDESCRIPTION "
