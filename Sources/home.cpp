@@ -573,6 +573,81 @@ QString Home::getAddressForRequest(int requestId) {
     return address;
 }
 
+<<<<<<< HEAD
+=======
+void Home::on_startDate_clicked()
+{
+    // Cleanup any existing calendar to prevent memory leaks
+    if (startDateCalendar) {
+        startDateCalendar->deleteLater();
+    }
+
+    startDateCalendar = new QCalendarWidget();
+    startDateCalendar->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    startDateCalendar->setStyleSheet(
+        "QCalendarWidget {"
+        "   background-color: #FDEEDC;" // Light peach
+        "   color: #F1A661;" // Medium orange
+        "   font-size: 10px;"
+        "}"
+        "QCalendarWidget QToolButton {"
+        "   color: #F1A661;"
+        "}"
+        "QCalendarWidget QMenu {"
+        "   background-color: #FDEEDC;"
+        "   color: #F1A661;"
+        "}"
+        );
+    startDateCalendar->setSelectedDate(startDateValue.isValid() ? startDateValue : QDate::currentDate());
+    startDateCalendar->setMinimumDate(QDate(2000, 1, 1));
+    startDateCalendar->setMaximumDate(QDate(2100, 12, 31));
+
+    QPoint pos = ui->startDate->mapToGlobal(QPoint(0, ui->startDate->height()));
+    startDateCalendar->move(pos);
+
+    connect(startDateCalendar, &QCalendarWidget::clicked, this, &Home::onStartDateSelected);
+    connect(startDateCalendar, &QCalendarWidget::clicked, startDateCalendar, &QCalendarWidget::deleteLater);
+    connect(startDateCalendar, &QCalendarWidget::destroyed, [this]() { startDateCalendar = nullptr; });
+    startDateCalendar->show();
+}
+
+void Home::on_endDate_clicked()
+{
+    if (endDateCalendar) {
+        endDateCalendar->deleteLater();
+    }
+
+    endDateCalendar = new QCalendarWidget();
+    endDateCalendar->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    endDateCalendar->setStyleSheet(
+        "QCalendarWidget {"
+        "   background-color: #FDEEDC;"
+        "   color: #F1A661;"
+        "   font-size: 10px;"
+        "}"
+        "QCalendarWidget QToolButton {"
+        "   color: #F1A661;"
+        "}"
+        "QCalendarWidget QMenu {"
+        "   background-color: #FDEEDC;"
+        "   color: #F1A661;"
+        "}"
+        );
+    endDateCalendar->setSelectedDate(endDateValue.isValid() ? endDateValue : QDate::currentDate());
+    endDateCalendar->setMinimumDate(QDate(2000, 1, 1));
+    endDateCalendar->setMaximumDate(QDate(2100, 12, 31));
+
+    QPoint pos = ui->endDate->mapToGlobal(QPoint(0, ui->endDate->height()));
+    endDateCalendar->move(pos);
+
+    connect(endDateCalendar, &QCalendarWidget::clicked, this, &Home::onEndDateSelected);
+    connect(endDateCalendar, &QCalendarWidget::clicked, endDateCalendar, &QCalendarWidget::deleteLater);
+    connect(endDateCalendar, &QCalendarWidget::destroyed, [this]() { endDateCalendar = nullptr; });
+
+    endDateCalendar->show();
+}
+
+>>>>>>> 1cd6aca (before merge)
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // for workers page
 void Home::loadAllWorkers()
@@ -595,7 +670,7 @@ void Home::loadAllWorkers()
         "   margin: 0px;"
         "}"
         "QScrollBar::handle:vertical {"
-        "   background: #DAA520;" /* Orange scrollbar handle to match design */
+        "   background: #DAA520;"
         "   border-radius: 5px;"
         "}"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
@@ -770,8 +845,98 @@ void Home::setupWorkerCards()
     }
 }
 
+<<<<<<< HEAD
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // for Request page
+=======
+Home::Home(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::Home)
+    , requestTask(nullptr)
+{
+    ui->setupUi(this);
+    // Setup profile icon
+    QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
+    profileIcon->setFixedSize(58, 58);
+    QHBoxLayout *profileLayout = qobject_cast<QHBoxLayout *>(ui->profile->layout());
+    if (profileLayout) {
+        profileLayout->insertWidget(0, profileIcon);
+    } else {
+        auto *newLayout = new QHBoxLayout(ui->profile);
+        newLayout->addWidget(profileIcon);
+        ui->profile->setLayout(newLayout);
+    }
+
+    // Setup filters icon
+    QSvgWidget *filtersSvg = new QSvgWidget(":/new/svgs/Frame 10.svg");
+    filtersSvg->setFixedSize(116, 34);
+    QVBoxLayout *filtersLayout = qobject_cast<QVBoxLayout *>(ui->filters->layout());
+    if (filtersLayout) {
+        filtersLayout->insertWidget(0, filtersSvg,0,Qt::AlignHCenter);
+    } else {
+        auto *newLayout = new QVBoxLayout(ui->filters);
+        newLayout->addWidget(filtersSvg);
+        ui->filters->setLayout(newLayout);
+    }
+    QIcon calender(":/new/svgs/calender.svg");
+    ui->startDate->setIcon(calender);
+    ui->startDate->setIconSize(QSize(24, 24));
+    ui->startDate->setText(" Start Date");
+    ui->startDate->setFixedHeight(40);
+
+    QIcon calender2(":/new/svgs/calender.svg");
+    ui->endDate->setIcon(calender2);
+    ui->endDate->setIconSize(QSize(24, 24));
+    ui->endDate->setText(" End Date");
+    ui->endDate->setFixedHeight(40);
+
+    ui->requestsPageBtn_2->setCursor(Qt::PointingHandCursor);
+    ui->workersPageBtn_2->setCursor(Qt::PointingHandCursor);
+    ui->startDate->setCursor(Qt::PointingHandCursor);
+    ui->endDate->setCursor(Qt::PointingHandCursor);
+    ui->filterName->setCursor(Qt::PointingHandCursor);
+
+    QSvgWidget *filtersSvg_3 = new QSvgWidget(":/new/svgs/Frame 10.svg");
+    filtersSvg_3->setFixedSize(116, 34);
+    QVBoxLayout *filtersLayout_3 = qobject_cast<QVBoxLayout *>(ui->filters_3->layout());
+    if (filtersLayout_3) {
+        filtersLayout_3->insertWidget(0, filtersSvg_3,0,Qt::AlignHCenter);
+    } else {
+        auto *newLayout_3 = new QVBoxLayout(ui->filters_3);
+        newLayout_3->addWidget(filtersSvg_3);
+        ui->filters_3->setLayout(newLayout_3);
+    }
+
+    QSvgWidget *profileIcon1 = new QSvgWidget(":/new/svgs/Group.svg");
+    profileIcon1->setFixedSize(58, 58);
+    QHBoxLayout *profileLayout1 = qobject_cast<QHBoxLayout *>(ui->profile_3->layout());
+    if (profileLayout1) {
+        profileLayout1->insertWidget(0, profileIcon1);
+    } else {
+        auto *newLayout = new QHBoxLayout(ui->profile_3);
+        newLayout->addWidget(profileIcon1);
+        ui->profile_3->setLayout(newLayout);
+    }
+
+    QIcon calender_3(":/new/svgs/calender.svg");
+    ui->startDate_3->setIcon(calender_3);
+    ui->startDate_3->setIconSize(QSize(24, 24));
+    ui->startDate_3->setText(" Start Date");
+    ui->startDate_3->setFixedHeight(40);
+
+    QIcon calender2_3(":/new/svgs/calender.svg");
+    ui->endDate_3->setIcon(calender2_3);
+    ui->endDate_3->setIconSize(QSize(24, 24));
+    ui->endDate_3->setText(" End Date");
+    ui->endDate_3->setFixedHeight(40);
+    setupRequestCards();
+    setupWorkerCards();
+    ui->addRequest->setCursor(Qt::PointingHandCursor);
+
+    setup_request_page();
+    ui->stackedWidget_2->setCurrentIndex(0);
+}
+>>>>>>> 1cd6aca (before merge)
 
 void Home::setup_request_page(){
     QFrame *mainFrame = ui->stackedWidget_2->widget(2)->findChild<QFrame*>("frame_10");
@@ -779,7 +944,6 @@ void Home::setup_request_page(){
         QSvgWidget *profileIcon = new QSvgWidget(":/new/svgs/Group.svg");
         profileIcon->setFixedSize(58, 58);
 
-        // Find or create profile_2 widget within mainFrame
         QWidget *profileWidget = mainFrame->findChild<QWidget*>("profile_2");
         if (!profileWidget) {
             profileWidget = new QFrame(mainFrame);
@@ -798,10 +962,9 @@ void Home::setup_request_page(){
             profileWidget->setLayout(newLayout);
         }
 
-        // Ensure mainFrame has a layout if not present
         if (!mainFrame->layout()) {
             auto *mainLayout = new QVBoxLayout(mainFrame);
-            mainLayout->addWidget(profileWidget); // Adjust based on where profile_2 should be
+            mainLayout->addWidget(profileWidget);
             mainFrame->setLayout(mainLayout);
         }
         // Check if RequestContent exists, create if not
@@ -1763,7 +1926,6 @@ Home::Home(QWidget *parent)
 
 Home::~Home()
 {
-    // Properly clean up any open calendar widgets
     if (startDateCalendar) {
         startDateCalendar->deleteLater();
         startDateCalendar = nullptr;
@@ -1836,13 +1998,12 @@ void Home::on_logout_clicked()
 
 void Home::on_pushButton_clicked()
 {
-    // Implementation for other button if needed
+
 }
 
 void Home::on_filterName_clicked()
 {
-    // Implementation for filtering by name
-    // This was missing but should be added if needed
+
 }
 
 void Home::onStartDateSelected(const QDate &date)
@@ -1859,81 +2020,17 @@ void Home::onEndDateSelected(const QDate &date)
     loadAllRequests();
 }
 
-void Home::on_startDate_clicked()
+void Home::on_startDate_3_clicked()
 {
-    // Cleanup any existing calendar to prevent memory leaks
-    if (startDateCalendar) {
-        startDateCalendar->deleteLater();
-    }
 
-    startDateCalendar = new QCalendarWidget();
-    startDateCalendar->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
-    startDateCalendar->setStyleSheet(
-        "QCalendarWidget {"
-        "   background-color: #FDEEDC;" // Light peach
-        "   color: #F1A661;" // Medium orange
-        "   font-size: 10px;"
-        "}"
-        "QCalendarWidget QToolButton {"
-        "   color: #F1A661;"
-        "}"
-        "QCalendarWidget QMenu {"
-        "   background-color: #FDEEDC;"
-        "   color: #F1A661;"
-        "}"
-        );
-    startDateCalendar->setSelectedDate(startDateValue.isValid() ? startDateValue : QDate::currentDate());
-    startDateCalendar->setMinimumDate(QDate(2000, 1, 1));
-    startDateCalendar->setMaximumDate(QDate(2100, 12, 31));
-
-    // Position below the button
-    QPoint pos = ui->startDate->mapToGlobal(QPoint(0, ui->startDate->height()));
-    startDateCalendar->move(pos);
-
-    connect(startDateCalendar, &QCalendarWidget::clicked, this, &Home::onStartDateSelected);
-    connect(startDateCalendar, &QCalendarWidget::clicked, startDateCalendar, &QCalendarWidget::deleteLater);
-    connect(startDateCalendar, &QCalendarWidget::destroyed, [this]() { startDateCalendar = nullptr; });
-    startDateCalendar->show();
 }
 
-void Home::on_endDate_clicked()
+void Home::on_endDate_3_clicked()
 {
-    // Cleanup any existing calendar to prevent memory leaks
-    if (endDateCalendar) {
-        endDateCalendar->deleteLater();
-    }
 
-    endDateCalendar = new QCalendarWidget();
-    endDateCalendar->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
-    endDateCalendar->setStyleSheet(
-        "QCalendarWidget {"
-        "   background-color: #FDEEDC;" // Light peach
-        "   color: #F1A661;" // Medium orange
-        "   font-size: 10px;"
-        "}"
-        "QCalendarWidget QToolButton {"
-        "   color: #F1A661;"
-        "}"
-        "QCalendarWidget QMenu {"
-        "   background-color: #FDEEDC;"
-        "   color: #F1A661;"
-        "}"
-        );
-    endDateCalendar->setSelectedDate(endDateValue.isValid() ? endDateValue : QDate::currentDate());
-    endDateCalendar->setMinimumDate(QDate(2000, 1, 1));
-    endDateCalendar->setMaximumDate(QDate(2100, 12, 31));
-
-    // Position below the button
-    QPoint pos = ui->endDate->mapToGlobal(QPoint(0, ui->endDate->height()));
-    endDateCalendar->move(pos);
-
-    connect(endDateCalendar, &QCalendarWidget::clicked, this, &Home::onEndDateSelected);
-    connect(endDateCalendar, &QCalendarWidget::clicked, endDateCalendar, &QCalendarWidget::deleteLater);
-    connect(endDateCalendar, &QCalendarWidget::destroyed, [this]() { endDateCalendar = nullptr; });
-
-    endDateCalendar->show();
 }
 
+<<<<<<< HEAD
 void Home::on_requestsPageBtn_4_clicked()
 {
     QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
@@ -1957,6 +2054,12 @@ void Home::on_workersPageBtn_4_clicked()
     }
     loadDataInProfile();
 }
+=======
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for Request page
+>>>>>>> 1cd6aca (before merge)
 
 void Home::on_workersPageBtn_3_clicked()
 {
@@ -1970,6 +2073,7 @@ void Home::on_workersPageBtn_3_clicked()
     loadDataInProfile();
 }
 
+<<<<<<< HEAD
 void Home::on_requestsPageBtn_3_clicked()
 {
     QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
@@ -2225,3 +2329,11 @@ void Home::on_pushButton_7_clicked()
     }
     loadDataInProfile();
 }
+=======
+
+
+
+
+
+
+>>>>>>> 1cd6aca (before merge)

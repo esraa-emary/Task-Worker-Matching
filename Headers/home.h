@@ -85,6 +85,10 @@ private slots:
     void on_pushButton_7_clicked();
     void on_requests_clicked();
 
+    void on_endDate_3_clicked();
+
+    void on_startDate_3_clicked();
+
 private:
     ClientData clientData;
     void loadDataInProfile();
@@ -115,8 +119,17 @@ private:
     void loadAllWorkers();
     void setupWorkerCards();
     QString getAddressForWorker(int workertId);
+<<<<<<< HEAD
     QFrame* createWorkerCard(int workerId,QString name, QString &taskName,
                              QString &locations, const float &rating);
+=======
+    QFrame* createWorkerCard(int workerId,QString &taskName,
+                             QString &locations,const float &rating);
+    QDate workerStartDateValue;
+    QDate workerEndDateValue;
+    QCalendarWidget *workerStartDateCalendar = nullptr;
+    QCalendarWidget *workerEndDateCalendar = nullptr;
+>>>>>>> 1cd6aca (before merge)
 
     // for worker page
     void viewWorkerDetails(int workerID);
