@@ -9,6 +9,8 @@
 #include <QDate>
 #include <QDateEdit>
 #include <QCalendarWidget>
+#include <QObject>
+#include <QEvent>
 #include "ui_home.h"
 
 namespace Ui {
@@ -46,6 +48,8 @@ public:
         ui->pushButton_3->setText(clientData.name);
         ui->pushButton_4->setText(clientData.name);
         ui->pushButton_5->setText(clientData.name);
+        ui->pushButton_6->setText(clientData.name);
+        ui->pushButton_7->setText(clientData.name);
     }
 
 signals:
@@ -73,6 +77,13 @@ private slots:
     void on_pushButton_3_clicked();
     void on_edit_clicked();
     void on_update_clicked();
+    void on_requestsPageBtn_6_clicked();
+    void on_workersPageBtn_6_clicked();
+    void on_pushButton_6_clicked();
+    void on_workersPageBtn_7_clicked();
+    void on_requestsPageBtn_7_clicked();
+    void on_pushButton_7_clicked();
+    void on_requests_clicked();
 
 private:
     ClientData clientData;
@@ -104,11 +115,18 @@ private:
     void loadAllWorkers();
     void setupWorkerCards();
     QString getAddressForWorker(int workertId);
-    QFrame* createWorkerCard(int workerId,QString &taskName,
-                             QString &locations,const float &rating);
+    QFrame* createWorkerCard(int workerId,QString name, QString &taskName,
+                             QString &locations, const float &rating);
 
-    // for making a request
+    // for worker page
+    void viewWorkerDetails(int workerID);
+    void loadAllClients(int workerId);
+    QFrame* createClientCardForWorker(int clientId,QString name,
+                                   QString &feedback, const float &rating);
 
+    // for client page
+    QFrame* createWorkerCardForClient(int workerId, QString name, QString &feedback, const float &rating);
+    void loadAllWorkersinClientPage();
 };
 
 #endif // HOME_H

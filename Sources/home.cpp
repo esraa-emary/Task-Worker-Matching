@@ -342,6 +342,11 @@ bool Home::eventFilter(QObject *watched, QEvent *event)
             viewRequestDetails(requestId);
             return true;
         }
+        else if (card && card->objectName().startsWith("workerCard_")) {
+            int workerId = card->property("workerId").toInt();
+            viewWorkerDetails(workerId);
+            return true;
+        }
     }
     return QMainWindow::eventFilter(watched, event);
 }
@@ -523,6 +528,7 @@ void Home::viewRequestDetails(int requestId)
                              "Could not find details for the selected request.");
     }
 }
+
 void Home::setupRequestCards()
 {
     if (connectToDatabase()) {
@@ -566,8 +572,6 @@ QString Home::getAddressForRequest(int requestId) {
     }
     return address;
 }
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // for workers page
@@ -614,7 +618,7 @@ void Home::loadAllWorkers()
     cardsLayout->setSpacing(15);
 
     QSqlQuery query;
-    query.prepare("SELECT WORKER.WORKERID, LOCATIONS, TASKNAME, RATING "
+    query.prepare("SELECT WORKER.WORKERID, name, LOCATIONS, TASKNAME, RATING "
                   "FROM WORKER, SPECIALTY, TASK "
                   "WHERE WORKER.WORKERID = SPECIALTY.WORKERID AND TASK.TASKID = SPECIALTY.TASKID "
                   "ORDER BY RATING DESC");
@@ -628,13 +632,18 @@ void Home::loadAllWorkers()
         return;
     }
 
-    while (query.next()) {
-        int workerId = query.value("WORKERID").toInt();
-        QString locations = query.value("LOCATIONS").toString();
-        QString taskName = query.value("TASKNAME").toString();
-        float rating = query.value("RATING").toFloat();
+    int workerId;
+    QString locations,taskName,name;
+    float rating;
 
-        QFrame *card = createWorkerCard(workerId, taskName, locations, rating);
+    while (query.next()) {
+        workerId = query.value("WORKERID").toInt();
+        name = query.value("name").toString();
+        locations = query.value("LOCATIONS").toString();
+        taskName = query.value("TASKNAME").toString();
+        rating = query.value("RATING").toFloat();
+
+        QFrame *card = createWorkerCard(workerId,name, taskName, locations, rating);
         cardsLayout->addWidget(card);
     }
 
@@ -656,7 +665,7 @@ void Home::loadAllWorkers()
     }
 }
 
-QFrame* Home::createWorkerCard(int workerId, QString &taskName,
+QFrame* Home::createWorkerCard(int workerId,QString name, QString &taskName,
                                QString &locations, const float &rating)
 {
     QFrame *card = new QFrame();
@@ -690,7 +699,7 @@ QFrame* Home::createWorkerCard(int workerId, QString &taskName,
 
     QHBoxLayout *leftGroupLayout = new QHBoxLayout();
 
-    QLabel *workerLabel = new QLabel(QString("Worker %1").arg(workerId));
+    QLabel *workerLabel = new QLabel(QString("%1 - %2").arg(workerId).arg(name));
     workerLabel->setStyleSheet(
         "QLabel {"
         "   font-weight: bold;"
@@ -741,6 +750,13 @@ QFrame* Home::createWorkerCard(int workerId, QString &taskName,
     cardLayout->addWidget(taskLabel);
     cardLayout->addStretch();
 
+    // Set fixed height for the card to make it more compact
+    card->setFixedHeight(90);
+
+    card->setCursor(Qt::PointingHandCursor);
+    card->setProperty("workerId", workerId);
+    card->installEventFilter(this);
+
     return card;
 }
 
@@ -753,6 +769,9 @@ void Home::setupWorkerCards()
                               "Failed to connect to the database.");
     }
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for Request page
 
 void Home::setup_request_page(){
     QFrame *mainFrame = ui->stackedWidget_2->widget(2)->findChild<QFrame*>("frame_10");
@@ -902,6 +921,718 @@ void Home::setup_request_page(){
     }
 }
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for worker page
+
+QFrame* Home::createClientCardForWorker(int clientId, QString name, QString &feedback, const float &rating) {
+    QFrame *card = new QFrame();
+    card->setObjectName(QString("workerCard_%1").arg(clientId));
+    card->setFrameShape(QFrame::StyledPanel);
+
+    card->setStyleSheet(
+        "QFrame {"
+        "   background-color: transparent;"
+        "   border: 2px solid #DAA520;"
+        "   border-radius: 10px;"
+        "   padding: 10px;"
+        "   max-height: 200px;"
+        "}"
+        "QFrame:hover {"
+        "   background-color: #F0D8A8;"
+        "}"
+        );
+
+
+    QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(card);
+    shadowEffect->setBlurRadius(10);
+    shadowEffect->setColor(QColor(0, 0, 0, 50));
+    shadowEffect->setOffset(2, 2);
+    card->setGraphicsEffect(shadowEffect);
+
+    QVBoxLayout *cardLayout = new QVBoxLayout(card);
+
+    QHBoxLayout *topRowLayout = new QHBoxLayout();
+    QHBoxLayout *leftGroupLayout = new QHBoxLayout();
+
+    QLabel *workerLabel = new QLabel(QString("%1 - %2").arg(clientId).arg(name), card);
+    workerLabel->setStyleSheet(
+        "QLabel {"
+        "   font-weight: bold;"
+        "   font-size: 30px;"
+        "   color: #E38B29;"
+        "   border: none;"
+        "}"
+        );
+
+    leftGroupLayout->addWidget(workerLabel);
+    leftGroupLayout->addStretch();
+
+    QLabel *ratingLabel;
+    if (rating == NULL){
+        ratingLabel = new QLabel(QString("Rating: NULL"));
+        ratingLabel->setStyleSheet(
+            "QLabel {"
+            "   font-weight: bold;"
+            "   font-size: 30px;"
+            "   color: #E38B29;"
+            "   border: none;"
+            "}"
+            );
+    }
+    else{
+        ratingLabel = new QLabel(QString("Rating: %1").arg(rating, 0, 'f', 1), card);
+        ratingLabel->setStyleSheet(
+            "QLabel {"
+            "   font-weight: bold;"
+            "   font-size: 30px;"
+            "   color: #E38B29;"
+            "   border: none;"
+            "}"
+            );
+    }
+
+    topRowLayout->addLayout(leftGroupLayout);
+    topRowLayout->addWidget(ratingLabel);
+
+    QHBoxLayout *reviewLayout = new QHBoxLayout();
+
+    // Add "Review:" label
+    QLabel *reviewLabel = new QLabel("Review:", card);
+    reviewLabel->setStyleSheet(
+        "QLabel {"
+        "   font-size: 25px;"
+        "   color: #E38B29;"
+        "   margin-top: 8px;"
+        "   border: none;"
+        "   font-weight: bold;"  // Make "Review:" bold to distinguish it
+        "}"
+        );
+
+    // Add feedback label
+    QLabel *feedbackLabel = new QLabel(feedback, card);
+    feedbackLabel->setStyleSheet(
+        "QLabel {"
+        "   font-size: 20px;"
+        "   color: #E38B29;"
+        "   margin-top: -15px;"
+        "   border: none;"
+        "   margin-left: 5px;"
+        "}"
+        );
+    feedbackLabel->setWordWrap(true);
+
+    // Add both labels to the horizontal layout
+    reviewLayout->addWidget(reviewLabel);
+    reviewLayout->addWidget(feedbackLabel, 1);
+
+    cardLayout->addLayout(topRowLayout);
+    cardLayout->addLayout(reviewLayout);
+    cardLayout->addWidget(feedbackLabel);
+
+    card->setFixedHeight(90);
+    return card;
+}
+
+void Home::loadAllClients(int workerId) {
+    // Clear existing content first
+    QFrame *contentFrame = ui->workersContent->findChild<QFrame*>("workersContent");
+    if (contentFrame) {
+        QLayout *layout = contentFrame->layout();
+        if (layout) {
+            QLayoutItem *item;
+            while ((item = layout->takeAt(0)) != nullptr) {
+                delete item->widget();
+                delete item;
+            }
+        }
+    } else {
+        contentFrame = new QFrame(ui->workersContent);
+        contentFrame->setObjectName("workersContent");
+        QVBoxLayout *contentLayout = new QVBoxLayout(contentFrame);
+        contentFrame->setLayout(contentLayout);
+        ui->workersContent->layout()->addWidget(contentFrame);
+    }
+
+    QScrollArea *scrollArea = new QScrollArea(contentFrame);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setStyleSheet(
+        "QScrollArea {"
+        "   background-color: transparent;"
+        "   border: none;"
+        "}"
+        "QScrollBar:vertical {"
+        "   background: #f1f1f1;"
+        "   width: 10px;"
+        "   margin: 0px;"
+        "}"
+        "QScrollBar::handle:vertical {"
+        "   background: #DAA520;"
+        "   border-radius: 5px;"
+        "}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
+        "   height: 0px;"
+        "}"
+        );
+
+    QWidget *scrollContent = new QWidget(scrollArea);
+    scrollContent->setStyleSheet("QWidget { background-color: transparent; }");
+    QVBoxLayout *cardsLayout = new QVBoxLayout(scrollContent);
+    cardsLayout->setSpacing(15);
+
+    QSqlQuery query;
+    query.prepare("SELECT NAME, CLIENT.CLIENTID, WORKERRATING, FEEDBACKBYCLIENT "
+                  "FROM ASSIGNMENT, CLIENT "
+                  "WHERE ASSIGNMENT.CLIENTID = CLIENT.CLIENTID AND WORKERID = :workerId "
+                  "ORDER BY WORKERRATING");
+    query.bindValue(":workerId", workerId);
+
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        QMessageBox::critical(this, "Database Error",
+                              "Could not fetch requests: " + query.lastError().text());
+        delete scrollContent;
+        delete scrollArea;
+        return;
+    }
+
+    while (query.next()) {
+        int clientId = query.value("CLIENT.CLIENTID").toInt();
+        QString name = query.value("NAME").toString();
+        QString feedback = query.value("FEEDBACKBYCLIENT").toString();
+        float rating = query.value("WORKERRATING").toFloat();
+
+        QFrame *card = createClientCardForWorker(clientId, name, feedback, rating);
+        cardsLayout->addWidget(card);
+    }
+
+    cardsLayout->addStretch();
+    scrollContent->setLayout(cardsLayout);
+    scrollArea->setWidget(scrollContent);
+
+    QVBoxLayout *frameLayout = qobject_cast<QVBoxLayout*>(contentFrame->layout());
+    if (frameLayout) {
+        frameLayout->addWidget(scrollArea);
+    }
+}
+
+void Home::viewWorkerDetails(int workerId) {
+    QWidget *workerPage = ui->stackedWidget_2->findChild<QWidget*>("workerPage");
+    if (!workerPage) {
+        qDebug() << "Error: workerPage not found!";
+        return;
+    }
+    ui->stackedWidget_2->setCurrentWidget(workerPage);
+
+    // Find the existing content frame
+    QFrame *workersContent = workerPage->findChild<QFrame*>("workersContent");
+    if (!workersContent) {
+        qDebug() << "Error: workersContent frame not found!";
+        return;
+    }
+
+    // Clear existing content
+    QLayout *layout = workersContent->layout();
+    if (layout) {
+        QLayoutItem *item;
+        while ((item = layout->takeAt(0)) != nullptr) {
+            delete item->widget();
+            delete item;
+        }
+    } else {
+        // Create new layout if none exists
+        layout = new QVBoxLayout(workersContent);
+        workersContent->setLayout(layout);
+    }
+
+    // Fetch worker details
+    QSqlQuery query;
+    query.prepare("SELECT LOCATIONS, name, TASKNAME, RATING "
+                  "FROM WORKER, SPECIALTY, TASK "
+                  "WHERE WORKER.WORKERID = SPECIALTY.WORKERID AND "
+                  "TASK.TASKID = SPECIALTY.TASKID AND WORKER.WORKERID = :workerId");
+    query.bindValue(":workerId", workerId);
+
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        QMessageBox::critical(this, "Database Error",
+                              "Could not fetch worker details: " + query.lastError().text());
+        return;
+    }
+
+    if (query.next()) {
+        QString name = query.value("name").toString();
+        QString locations = query.value("LOCATIONS").toString();
+        QString taskName = query.value("TASKNAME").toString();
+        float rating = query.value("RATING").toFloat();
+
+        // Create worker info card
+        QFrame *card = new QFrame(workersContent);
+        card->setObjectName(QString("workerCard_%1").arg(workerId));
+        card->setStyleSheet(
+            "QFrame {"
+            "   background-color: transparent;"
+            "   border: none;"
+            "   border-radius: 10px;"
+            "   padding: 0px;"
+            "   margin: 5px;"
+            "}"
+            );
+
+        QPushButton *backButton = ui->workersContent->findChild<QPushButton*>("backButton");
+        if (!backButton) {
+            backButton = new QPushButton;
+            backButton->setObjectName("backButton");
+            backButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: #E38B29;"
+                "   border-radius: 5px;"
+                "   border: none;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: #C37422;"
+                "}"
+                );
+
+            // Use QIcon directly from SVG resource
+            backButton->setIcon(QIcon(":/new/svgs/back.svg"));
+            backButton->setIconSize(QSize(50, 38));
+            backButton->setFixedSize(50, 38);
+
+            // Wrap in a container layout
+            QWidget *backContainer = new QWidget;
+            QHBoxLayout *backLayout = new QHBoxLayout(backContainer);
+            backLayout->setContentsMargins(0, 0, 0, 0);
+
+            // Add to top of main layout
+            QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(ui->workersContent->layout());
+            if (!mainLayout) {
+                mainLayout = new QVBoxLayout(ui->workersContent);
+                ui->workersContent->setLayout(mainLayout);
+            }
+            mainLayout->insertWidget(0, backContainer);
+
+            // Action
+            connect(backButton, &QPushButton::clicked, this, [this]() {
+                QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
+                ui->stackedWidget_2->setCurrentWidget(workersPage);
+            });
+
+        }
+
+        QVBoxLayout *cardLayout = new QVBoxLayout(card);
+
+        // Top row with name and rating
+        QHBoxLayout *topRow = new QHBoxLayout();
+        topRow->setSpacing(20);  // Add space between name, rating, and locations
+        topRow->setContentsMargins(0, 0, 0, 0);
+
+        QLabel *nameLabel = new QLabel(QString("%1 - %2").arg(workerId).arg(name), card);
+        nameLabel->setStyleSheet(
+            "QLabel {"
+            "   border: none;"
+            "   font-weight: bold;"
+            "   font-size: 30px;"
+            "   color: #E38B29;"
+            "}"
+            );
+
+        QString ratingText = QString("<span style='font-size:30px; font-weight:bold;'>Rating: </span>"
+                                     "<span style='font-size:25px;'>%1</span>")
+                                 .arg(rating, 0, 'f', 1);
+
+        QLabel *ratingLabel = new QLabel(card);
+        ratingLabel->setText(ratingText);
+        ratingLabel->setStyleSheet(
+            "QLabel {"
+            "   color: #E38B29;"
+            "   border: none;"
+            "   margin: 5px;"
+            "}"
+            );
+
+        QLabel *locationsLabel = new QLabel(card);
+        locationsLabel->setText("<span style='font-size:30px; font-weight:bold;'>Locations: </span>"
+                                "<span style='font-size:25px;'>" + locations + "</span>");
+        locationsLabel->setStyleSheet(
+            "QLabel {"
+            "   color: #E38B29;"
+            "   border: none;"
+            "   margin: 5px;"
+            "}"
+            );
+
+        // Add all widgets to the top row
+        topRow->addWidget(backButton);
+        topRow->addSpacing(5);
+        topRow->addWidget(nameLabel);
+        topRow->addSpacing(15);
+        topRow->addWidget(ratingLabel);
+        topRow->addStretch();              // Push name + rating to the left
+        topRow->addWidget(locationsLabel);
+
+        // Add the top row to the card layout
+        cardLayout->addLayout(topRow);
+
+        // Specialty row
+        QLabel *specialtyLabel = new QLabel(card);
+        specialtyLabel->setText("<span style='font-size:30px; font-weight:bold;'>Specialists: </span>"
+                                "<span style='font-size:20px;'>" + taskName + "</span>");
+        specialtyLabel->setStyleSheet(
+            "QLabel {"
+            "   color: #E38B29;"
+            "   border: none;"
+            "   margin: 5px;"
+            "}"
+            );
+        cardLayout->addWidget(specialtyLabel);
+
+        layout->addWidget(card);
+    }
+
+    // Load client reviews into the same container
+    loadAllClients(workerId);
+}
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// for client page
+
+QFrame* Home::createWorkerCardForClient(int workerId, QString name, QString &feedback, const float &rating) {
+    QFrame *card = new QFrame();
+    card->setObjectName(QString("workerCard_%1").arg(workerId));
+    card->setFrameShape(QFrame::StyledPanel);
+
+    card->setStyleSheet(
+        "QFrame {"
+        "   background-color: transparent;"
+        "   border: 2px solid #DAA520;"
+        "   border-radius: 10px;"
+        "   padding: 10px;"
+        "   max-height: 200px;"
+        "}"
+        "QFrame:hover {"
+        "   background-color: #F0D8A8;"
+        "}"
+        );
+
+
+    QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(card);
+    shadowEffect->setBlurRadius(10);
+    shadowEffect->setColor(QColor(0, 0, 0, 50));
+    shadowEffect->setOffset(2, 2);
+    card->setGraphicsEffect(shadowEffect);
+
+    QVBoxLayout *cardLayout = new QVBoxLayout(card);
+
+    QHBoxLayout *topRowLayout = new QHBoxLayout();
+    QHBoxLayout *leftGroupLayout = new QHBoxLayout();
+
+    QLabel *workerLabel = new QLabel(QString("%1 - %2").arg(workerId).arg(name), card);
+    workerLabel->setStyleSheet(
+        "QLabel {"
+        "   font-weight: bold;"
+        "   font-size: 30px;"
+        "   color: #E38B29;"
+        "   border: none;"
+        "}"
+        );
+
+    leftGroupLayout->addWidget(workerLabel);
+    leftGroupLayout->addStretch();
+
+    QLabel *ratingLabel;
+    if (rating == NULL){
+        ratingLabel = new QLabel(QString("Rating: NULL"));
+        ratingLabel->setStyleSheet(
+            "QLabel {"
+            "   font-weight: bold;"
+            "   font-size: 30px;"
+            "   color: #E38B29;"
+            "   border: none;"
+            "}"
+            );
+    }
+    else{
+        ratingLabel = new QLabel(QString("Rating: %1").arg(rating, 0, 'f', 1), card);
+        ratingLabel->setStyleSheet(
+            "QLabel {"
+            "   font-weight: bold;"
+            "   font-size: 30px;"
+            "   color: #E38B29;"
+            "   border: none;"
+            "}"
+            );
+    }
+
+    topRowLayout->addLayout(leftGroupLayout);
+    topRowLayout->addWidget(ratingLabel);
+
+    QHBoxLayout *reviewLayout = new QHBoxLayout();
+
+    // Add "Review:" label
+    QLabel *reviewLabel = new QLabel("Review:", card);
+    reviewLabel->setStyleSheet(
+        "QLabel {"
+        "   font-size: 25px;"
+        "   color: #E38B29;"
+        "   margin-top: 8px;"
+        "   border: none;"
+        "   font-weight: bold;"  // Make "Review:" bold to distinguish it
+        "}"
+        );
+
+    // Add feedback label
+    QLabel *feedbackLabel = new QLabel(feedback, card);
+    feedbackLabel->setStyleSheet(
+        "QLabel {"
+        "   font-size: 20px;"
+        "   color: #E38B29;"
+        "   margin-top: -15px;"
+        "   border: none;"
+        "   margin-left: 5px;"
+        "}"
+        );
+    feedbackLabel->setWordWrap(true);
+
+    // Add both labels to the horizontal layout
+    reviewLayout->addWidget(reviewLabel);
+    reviewLayout->addWidget(feedbackLabel, 1);
+
+    cardLayout->addLayout(topRowLayout);
+    cardLayout->addLayout(reviewLayout);
+    cardLayout->addWidget(feedbackLabel);
+
+    card->setFixedHeight(90);
+    return card;
+}
+
+void Home::loadAllWorkersinClientPage() {
+    // Clear existing content first
+    QFrame *contentFrame = ui->workersContent->findChild<QFrame*>("cilentContent");
+    if (contentFrame) {
+        QLayout *layout = contentFrame->layout();
+        if (layout) {
+            QLayoutItem *item;
+            while ((item = layout->takeAt(0)) != nullptr) {
+                delete item->widget();
+                delete item;
+            }
+        }
+    } else {
+        contentFrame = new QFrame(ui->workersContent);
+        contentFrame->setObjectName("cilentContent");
+        QVBoxLayout *contentLayout = new QVBoxLayout(contentFrame);
+        contentFrame->setLayout(contentLayout);
+        ui->workersContent->layout()->addWidget(contentFrame);
+    }
+
+    QScrollArea *scrollArea = new QScrollArea(contentFrame);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setStyleSheet(
+        "QScrollArea {"
+        "   background-color: transparent;"
+        "   border: none;"
+        "}"
+        "QScrollBar:vertical {"
+        "   background: #f1f1f1;"
+        "   width: 10px;"
+        "   margin: 0px;"
+        "}"
+        "QScrollBar::handle:vertical {"
+        "   background: #DAA520;"
+        "   border-radius: 5px;"
+        "}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
+        "   height: 0px;"
+        "}"
+        );
+
+    QWidget *scrollContent = new QWidget(scrollArea);
+    scrollContent->setStyleSheet("QWidget { background-color: transparent; }");
+    QVBoxLayout *cardsLayout = new QVBoxLayout(scrollContent);
+    cardsLayout->setSpacing(15);
+
+    QSqlQuery query;
+    query.prepare("SELECT WORKER.NAME, WORKER.WORKERID, CLIENTRATING, FEEDBACKBYWORKER "
+                  "FROM ASSIGNMENT, WORKER "
+                  "WHERE ASSIGNMENT.WORKERID = WORKER.WORKERID AND clientId = :clientId "
+                  "ORDER BY CLIENTRATING");
+    query.bindValue(":clientId", clientData.id);
+
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        QMessageBox::critical(this, "Database Error",
+                              "Could not fetch requests: " + query.lastError().text());
+        delete scrollContent;
+        delete scrollArea;
+        return;
+    }
+
+    while (query.next()) {
+        int workerId = query.value("WORKER.WORKERID").toInt();
+        QString name = query.value("WORKER.NAME").toString();
+        QString feedback = query.value("FEEDBACKBYWORKER").toString();
+        float rating = query.value("CLIENTRATING").toFloat();
+
+        QFrame *card = createWorkerCardForClient(workerId, name, feedback, rating);
+        cardsLayout->addWidget(card);
+    }
+
+    cardsLayout->addStretch();
+    scrollContent->setLayout(cardsLayout);
+    scrollArea->setWidget(scrollContent);
+
+    QVBoxLayout *frameLayout = qobject_cast<QVBoxLayout*>(contentFrame->layout());
+    if (frameLayout) {
+        frameLayout->addWidget(scrollArea);
+    }
+}
+
+void Home::on_requests_clicked()
+{
+    QWidget *workerPage = ui->stackedWidget_2->findChild<QWidget*>("workerPage");
+    if (!workerPage) {
+        qDebug() << "Error: workerPage not found!";
+        return;
+    }
+    ui->stackedWidget_2->setCurrentWidget(workerPage);
+
+    // Find the existing content frame
+    QFrame *workersContent = workerPage->findChild<QFrame*>("workersContent");
+    if (!workersContent) {
+        qDebug() << "Error: workersContent frame not found!";
+        return;
+    }
+
+    // Clear existing content
+    QLayout *layout = workersContent->layout();
+    if (layout) {
+        QLayoutItem *item;
+        while ((item = layout->takeAt(0)) != nullptr) {
+            delete item->widget();
+            delete item;
+        }
+    } else {
+        // Create new layout if none exists
+        layout = new QVBoxLayout(workersContent);
+        workersContent->setLayout(layout);
+    }
+
+    // Create worker info card
+    QFrame *card = new QFrame(ui->clientContent);
+    card->setObjectName(QString("workerCard_%1").arg(clientData.id));
+    card->setStyleSheet(
+        "QFrame {"
+        "   background-color: transparent;"
+        "   border: none;"
+        "   border-radius: 10px;"
+        "   padding: 0px;"
+        "   margin: 5px;"
+        "}"
+        );
+
+    QPushButton *backButton = ui->workersContent->findChild<QPushButton*>("backButton");
+    if (!backButton) {
+        backButton = new QPushButton;
+        backButton->setObjectName("backButton");
+        backButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #E38B29;"
+            "   border-radius: 5px;"
+            "   border: none;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #C37422;"
+            "}"
+            );
+
+        // Use QIcon directly from SVG resource
+        backButton->setIcon(QIcon(":/new/svgs/back.svg"));
+        backButton->setIconSize(QSize(50, 38));
+        backButton->setFixedSize(50, 38);
+
+        // Wrap in a container layout
+        QWidget *backContainer = new QWidget;
+        QHBoxLayout *backLayout = new QHBoxLayout(backContainer);
+        backLayout->setContentsMargins(0, 0, 0, 0);
+
+        // Add to top of main layout
+        QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(ui->workersContent->layout());
+        if (!mainLayout) {
+            mainLayout = new QVBoxLayout(ui->workersContent);
+            ui->workersContent->setLayout(mainLayout);
+        }
+        mainLayout->insertWidget(0, backContainer);
+
+        // Action
+        connect(backButton, &QPushButton::clicked, this, [this]() {
+            QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+            ui->stackedWidget_2->setCurrentWidget(profilePage);
+        });
+
+    }
+
+    QVBoxLayout *cardLayout = new QVBoxLayout(card);
+
+    // Top row with name and rating
+    QHBoxLayout *topRow = new QHBoxLayout();
+    topRow->setSpacing(20);  // Add space between name, rating, and locations
+    topRow->setContentsMargins(0, 0, 0, 0);
+
+    QLabel *nameLabel = new QLabel(QString("%1 - %2").arg(clientData.id).arg(clientData.name), card);
+    nameLabel->setStyleSheet(
+        "QLabel {"
+        "   border: none;"
+        "   font-weight: bold;"
+        "   font-size: 30px;"
+        "   color: #E38B29;"
+        "}"
+        );
+
+    QLabel *locationsLabel = new QLabel(card);
+    locationsLabel->setText("<span style='font-size:30px; font-weight:bold;'>Locations: </span>"
+                            "<span style='font-size:25px;'>" + clientData.address + "</span>");
+    locationsLabel->setStyleSheet(
+        "QLabel {"
+        "   color: #E38B29;"
+        "   border: none;"
+        "   margin: 5px;"
+        "}"
+        );
+
+    // Add all widgets to the top row
+    topRow->addWidget(backButton);
+    topRow->addSpacing(5);
+    topRow->addWidget(nameLabel);
+    topRow->addStretch();              // Push name + rating to the left
+    topRow->addWidget(locationsLabel);
+
+    // Add the top row to the card layout
+    cardLayout->addLayout(topRow);
+
+    // Specialty row
+    QLabel *specialtyLabel = new QLabel(card);
+    specialtyLabel->setText("<span style='font-size:30px; font-weight:bold;'>Feedback: </span>"
+                            "<span style='font-size:20px;'>" + clientData.feedback + "</span>");
+    specialtyLabel->setStyleSheet(
+        "QLabel {"
+        "   color: #E38B29;"
+        "   border: none;"
+        "   margin: 5px;"
+        "}"
+        );
+    cardLayout->addWidget(specialtyLabel);
+
+    layout->addWidget(card);
+
+    // Load client reviews into the same container
+    loadAllWorkersinClientPage();
+    loadDataInProfile();
+}
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 Home::Home(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Home)
@@ -951,6 +1682,30 @@ Home::Home(QWidget *parent)
     ui->startDate->setCursor(Qt::PointingHandCursor);
     ui->endDate->setCursor(Qt::PointingHandCursor);
     ui->filterName->setCursor(Qt::PointingHandCursor);
+
+    // Setup profile icon in worker
+    QSvgWidget *profileIcon3 = new QSvgWidget(":/new/svgs/Group.svg");
+    profileIcon3->setFixedSize(58, 58);
+    QHBoxLayout *profileLayout3 = qobject_cast<QHBoxLayout *>(ui->profile_6->layout());
+    if (profileLayout3) {
+        profileLayout3->insertWidget(0, profileIcon3);
+    } else {
+        auto *newLayout = new QHBoxLayout(ui->profile_6);
+        newLayout->addWidget(profileIcon3);
+        ui->profile_6->setLayout(newLayout);
+    }
+
+    // Setup profile icon in client
+    QSvgWidget *profileIcon4 = new QSvgWidget(":/new/svgs/Group.svg");
+    profileIcon4->setFixedSize(58, 58);
+    QHBoxLayout *profileLayout4 = qobject_cast<QHBoxLayout *>(ui->profile_7->layout());
+    if (profileLayout4) {
+        profileLayout4->insertWidget(0, profileIcon4);
+    } else {
+        auto *newLayout = new QHBoxLayout(ui->profile_7);
+        newLayout->addWidget(profileIcon4);
+        ui->profile_7->setLayout(newLayout);
+    }
 
     // for filter icons in workers page
     QSvgWidget *filtersSvg_3 = new QSvgWidget(":/new/svgs/Frame 10.svg");
@@ -1030,17 +1785,6 @@ Home::~Home()
     delete ui;
     delete requestTask;
 }
-
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------
-// for Request page
-
-
-
-
-
-
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // for buttons
@@ -1272,6 +2016,7 @@ void Home::loadDataInProfile() {
     ui->pushButton_3->setText(clientData.name);
     ui->pushButton_4->setText(clientData.name);
     ui->pushButton_5->setText(clientData.name);
+    ui->pushButton_6->setText(clientData.name);
 }
 
 // for profile page
@@ -1406,3 +2151,77 @@ void Home::on_update_clicked()
     ui->update->setEnabled(false);
 }
 
+void Home::on_requestsPageBtn_6_clicked()
+{
+    QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
+
+    if (requestsPage) {
+        ui->stackedWidget_2->setCurrentWidget(requestsPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_workersPageBtn_6_clicked()
+{
+    QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
+
+    if (workersPage) {
+        ui->stackedWidget_2->setCurrentWidget(workersPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+void Home::on_pushButton_6_clicked()
+{
+    QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+
+    if (profilePage) {
+        ui->stackedWidget_2->setCurrentWidget(profilePage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+
+void Home::on_workersPageBtn_7_clicked()
+{
+    QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
+
+    if (workersPage) {
+        ui->stackedWidget_2->setCurrentWidget(workersPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+
+void Home::on_requestsPageBtn_7_clicked()
+{
+    QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
+
+    if (requestsPage) {
+        ui->stackedWidget_2->setCurrentWidget(requestsPage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
+
+
+void Home::on_pushButton_7_clicked()
+{
+    QWidget *profilePage = ui->stackedWidget_2->findChild<QWidget*>("profilePage");
+
+    if (profilePage) {
+        ui->stackedWidget_2->setCurrentWidget(profilePage);
+    } else {
+        qDebug() << "Error: workersPage not found!";
+    }
+    loadDataInProfile();
+}
