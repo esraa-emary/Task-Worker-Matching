@@ -70,7 +70,7 @@ QFrame {
          <property name="maximumSize">
           <size>
            <width>1500</width>
-           <height>200</height>
+           <height>150</height>
           </size>
          </property>
          <property name="font">
@@ -83,7 +83,7 @@ QFrame {
 	border: 1px solid #FFD8A9;
     height: 20px;
     background-color: #FFD8A9;
-	border-radius: 30px;
+	border-radius: 20px;
 	color:#E38B29;
 }
 
@@ -127,7 +127,7 @@ QPushButton:hover{
                <property name="maximumSize">
                 <size>
                  <width>410</width>
-                 <height>75</height>
+                 <height>50</height>
                 </size>
                </property>
                <property name="font">
@@ -148,7 +148,7 @@ QPushButton:hover{
                <property name="maximumSize">
                 <size>
                  <width>410</width>
-                 <height>75</height>
+                 <height>50</height>
                 </size>
                </property>
                <property name="font">

@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QMessageBox>
 
-RequestTask::RequestTask(QMainWindow *parent)
+RequestTask::RequestTask(QMainWindow *parent,int taskId,QString taskName)
     : QMainWindow(parent)
     , ui(new Ui::RequestTask)
 {
@@ -36,18 +36,31 @@ RequestTask::RequestTask(QMainWindow *parent)
     }
 
     QSqlQuery query;
-    query.prepare("SELECT taskName FROM task");
+    query.prepare(R"(
+    SELECT DISTINCT WORKER.NAME
+    FROM WORKER
+    JOIN SPECIALTY ON WORKER.WORKERID = SPECIALTY.WORKERID
+    JOIN TASK ON TASK.TASKID = SPECIALTY.TASKID
+    WHERE TASK.TASKID = :taskId
+)");
+
+    query.bindValue(":taskId", taskId);
+
     if (!query.exec()) {
         qDebug() << "Error executing query:" << query.lastError().text();
         QMessageBox::critical(this, "Database Error",
-                              "Could not fetch tasks: " + query.lastError().text());
+                              "Could not fetch workers:\n" + query.lastError().text());
         return;
     }
 
+    ui->comboBox->clear();
+
     while (query.next()) {
-        QString task = query.value("taskName").toString();
-        ui->comboBox->addItem(task);
+        QString workerName = query.value(0).toString();  // Use index 0 for performance
+        ui->comboBox->addItem(workerName);
     }
+
+    ui->taskName->setText(taskName);
 }
 
 RequestTask::~RequestTask()
@@ -57,20 +70,19 @@ RequestTask::~RequestTask()
 
 void RequestTask::on_cancel_clicked()
 {
-    emit backToHome();
     this->close();
 }
 
 void RequestTask::on_back_clicked()
 {
-    emit backToHome();
     this->close();
 }
 
 void RequestTask::on_add_clicked()
 {
+    // Validate task selection
     if (ui->comboBox->currentIndex() == -1) {
-        QMessageBox::warning(this, "Error", "Please select a task!");
+        QMessageBox::warning(this, "Input Error", "Please select a worker.");
         return;
     }
 
@@ -82,7 +94,6 @@ void RequestTask::on_add_clicked()
     }
 
     QString description = ui->description->text();
-    QString task = ui->comboBox->currentText();
     QDateTime preferredTimeSlots = ui->preferredTimeSlots->dateTime();
 
     QSqlDatabase::database().transaction();
@@ -94,12 +105,10 @@ void RequestTask::on_add_clicked()
         QSqlDatabase::database().rollback();
         return;
     }
-
-    int requestId = 1;
-    if (query.next()) {
-        QVariant maxIdVar = query.value(0);
-        if (maxIdVar.isValid() && !maxIdVar.isNull()) {
-            requestId = maxIdVar.toInt() + 1;
+    if (maxIdQuery.next()) {
+        QVariant maxId = maxIdQuery.value(0);
+        if (maxId.isValid() && !maxId.isNull()) {
+            requestId = maxId.toInt() + 1;
         }
     }
 
@@ -111,7 +120,8 @@ void RequestTask::on_add_clicked()
         QSqlDatabase::database().rollback();
         return;
     }
-    int taskId = query.value(0).toInt();
+
+    int workerId = workerQuery.value(0).toInt();
 
     query.prepare(
         "INSERT INTO request (requestId, clientId, taskId, address, "

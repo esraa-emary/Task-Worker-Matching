@@ -29,13 +29,6 @@ go
 
 if exists (select 1
    from sys.sysreferences r join sys.sysobjects o on (o.id = r.constid and o.type = 'F')
-   where r.fkeyid = object_id('PAYMENTINFO') and o.name = 'FK_PAYMENTI_USES_CLIENT')
-alter table PAYMENTINFO
-drop constraint FK_PAYMENTI_USES_CLIENT
-go
-
-if exists (select 1
-   from sys.sysreferences r join sys.sysobjects o on (o.id = r.constid and o.type = 'F')
    where r.fkeyid = object_id('REQUEST') and o.name = 'FK_REQUEST_MAKES_CLIENT')
 alter table REQUEST
 drop constraint FK_REQUEST_MAKES_CLIENT
@@ -99,15 +92,6 @@ drop index ASSIGNMENT.ISASSIGNED2_FK
 
 if exists (select 1
             from  sysindexes
-           where  id    = object_id('PAYMENTINFO')
-            and   name  = 'USES_FK'
-            and   indid > 0
-            and   indid < 255)
-drop index PAYMENTINFO.USES_FK
-    go
-
-if exists (select 1
-            from  sysindexes
            where  id    = object_id('REQUEST')
             and   name  = 'REQUIRES_FK'
             and   indid > 0
@@ -155,13 +139,6 @@ drop table ASSIGNMENT
     where  id = object_id('CLIENT')
     and   type = 'U')
 drop table CLIENT
-    go
-
-    if exists (select 1
-    from  sysobjects
-    where  id = object_id('PAYMENTINFO')
-    and   type = 'U')
-drop table PAYMENTINFO
     go
 
     if exists (select 1
@@ -223,20 +200,6 @@ create table CLIENT (
                         OVERALLFEEDBACK      varchar(1024)        null,
                         PASSWORD             varchar(100)         not null,
                         constraint PK_CLIENT primary key nonclustered (CLIENTID)
-)
-    go
-
-/*==============================================================*/
-/* Table: PAYMENTINFO                                           */
-/*==============================================================*/
-create table PAYMENTINFO (
-                             CARDNUMBER           varchar(19)          not null,
-                             CLIENTID             int                  not null,
-                             CARDTYPE             varchar(100)         not null,
-                             EXPIRATIONDATE       datetime             not null,
-                             BILLINGADDRESS       varchar(250)         not null,
-                             constraint PK_PAYMENTINFO primary key nonclustered (CARDNUMBER),
-                             constraint AK_CARDNUMBER_PAYMENTI unique (CARDNUMBER, CARDTYPE)
 )
     go
 
@@ -308,11 +271,6 @@ alter table ASSIGNMENT
         references WORKER (WORKERID)
     go
 
-alter table PAYMENTINFO
-    add constraint FK_PAYMENTI_USES_CLIENT foreign key (CLIENTID)
-        references CLIENT (CLIENTID)
-    go
-
 alter table REQUEST
     add constraint FK_REQUEST_MAKES_CLIENT foreign key (CLIENTID)
         references CLIENT (CLIENTID)
@@ -361,14 +319,6 @@ create index PERFORMS_FK on ASSIGNMENT (
 /*==============================================================*/
 create index HASASSIGNMENT_FK on ASSIGNMENT (
                                              CLIENTID ASC
-    )
-    go
-
-/*==============================================================*/
-/* Index: USES_FK                                               */
-/*==============================================================*/
-create index USES_FK on PAYMENTINFO (
-                                     CLIENTID ASC
     )
     go
 
@@ -782,60 +732,6 @@ SELECT * FROM REQUEST
 END
 GO
 
--- PaymentInfo Procedures
-CREATE PROCEDURE CreatePaymentInfo
-    @CardNumber VARCHAR(19),
-    @ClientID INT,
-    @CardType VARCHAR(100),
-    @ExpirationDate DATETIME,
-    @BillingAddress VARCHAR(250)
-AS
-BEGIN
-INSERT INTO PAYMENTINFO (CARDNUMBER, CLIENTID, CARDTYPE, EXPIRATIONDATE, BILLINGADDRESS)
-VALUES (@CardNumber, @ClientID, @CardType, @ExpirationDate, @BillingAddress)
-END
-GO
-
-CREATE PROCEDURE UpdatePaymentInfo
-    @CardNumber VARCHAR(19),
-    @ClientID INT,
-    @CardType VARCHAR(100),
-    @ExpirationDate DATETIME,
-    @BillingAddress VARCHAR(250)
-AS
-BEGIN
-UPDATE PAYMENTINFO
-SET CLIENTID = @ClientID,
-    CARDTYPE = @CardType,
-    EXPIRATIONDATE = @ExpirationDate,
-    BILLINGADDRESS = @BillingAddress
-WHERE CARDNUMBER = @CardNumber
-END
-GO
-
-CREATE PROCEDURE DeletePaymentInfo
-    @CardNumber VARCHAR(19)
-AS
-BEGIN
-DELETE FROM PAYMENTINFO WHERE CARDNUMBER = @CardNumber
-END
-GO
-
-CREATE PROCEDURE GetPaymentInfo
-    @CardNumber VARCHAR(19)
-AS
-BEGIN
-SELECT * FROM PAYMENTINFO WHERE CARDNUMBER = @CardNumber
-END
-GO
-
-CREATE PROCEDURE GetAllPaymentInfos
-    AS
-BEGIN
-SELECT * FROM PAYMENTINFO
-END
-GO
-
 -- Specialty Procedures
 CREATE PROCEDURE CreateSpecialty
     @WorkerID INT,
@@ -1108,11 +1004,6 @@ VALUES
 (1, NULL, 'Mike Johnson', 2, 'City, Town', DATEADD(day, 1, GETDATE()), 4.5), -- Available tomorrow
 (2, NULL, 'Sarah Brown', 1, 'City', DATEADD(day, 2, GETDATE()), 4.0); -- Available in 2 days
 
-INSERT INTO PAYMENTINFO (CARDNUMBER, CLIENTID, CARDTYPE, EXPIRATIONDATE, BILLINGADDRESS)
-VALUES
-('1234567890123456', 1, 'Visa', '2026-12-31', '123 Main St, City'),
-('9876543210987654', 2, 'MasterCard', '2027-06-30', '456 Oak Ave, Town');
-
 INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION)
 VALUES
 (4, 1, 2, '456 Oak Ave, Town', GETDATE(), DATEADD(day, 2, GETDATE()), 'Install new lighting in living room');
@@ -1130,7 +1021,6 @@ VALUES
 SELECT * FROM CLIENT;
 SELECT * FROM TASK;
 SELECT * FROM WORKER;
-SELECT * FROM PAYMENTINFO;
 SELECT * FROM REQUEST;
 SELECT * FROM SPECIALTY;
 SELECT * FROM ASSIGNMENT;

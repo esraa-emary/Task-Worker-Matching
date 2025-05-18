@@ -47,7 +47,7 @@ QFrame {
 	border: 1px solid #FFD8A9;
     height: 20px;
     background-color: #FFD8A9;
-border-radius: 30px;
+border-radius: 20px;
 color:#E38B29;
 }
 
@@ -72,8 +72,8 @@ transition: all 0.3s ease-in-out;
         <widget class="QPushButton" name="back">
          <property name="maximumSize">
           <size>
-           <width>410</width>
-           <height>75</height>
+           <width>200</width>
+           <height>50</height>
           </size>
          </property>
          <property name="font">
@@ -117,7 +117,7 @@ transition: all 0.3s ease-in-out;
          <property name="maximumSize">
           <size>
            <width>410</width>
-           <height>420</height>
+           <height>330</height>
           </size>
          </property>
          <property name="frameShape">
@@ -137,20 +137,20 @@ transition: all 0.3s ease-in-out;
             </property>
             <property name="styleSheet">
              <string notr="true">QLineEdit{
-	height: 80px;
+	height: 50px;
 	border-radius: 10px;
 	border: 1px solid #fff;
 	padding-left:10px;
 	background-color: #FDEEDC;
 	color:#E38B29;
-border-radius: 30px;
+border-radius: 20px;
 }
 
 QPushButton{
 	border: 1px solid #FFD8A9;
     height: 20px;
     background-color: #FFD8A9;
-border-radius: 30px;
+border-radius: 20px;
 color:#E38B29;
 }
 
@@ -206,7 +206,7 @@ transition: all 0.3s ease-in-out;
                <property name="maximumSize">
                 <size>
                  <width>410</width>
-                 <height>75</height>
+                 <height>50</height>
                 </size>
                </property>
                <property name="font">

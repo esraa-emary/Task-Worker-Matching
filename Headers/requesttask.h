@@ -12,18 +12,20 @@ class RequestTask : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit RequestTask(QMainWindow *parent = nullptr);
+    explicit RequestTask(QMainWindow *parent = nullptr,int taskId = 0,QString taskName = "");
     ~RequestTask();
     struct  ClientData {
+        int taskId;
         QString name;
         QString password;
         QString address;
         QString email;
         QString phone;
         QString feedback;
+        QString taskName;
         int id;
     };
-    void setClient(int &id,QString &name,QString &password,QString &address,QString &email,QString &phone,QString &feedback)
+    void setClient(int &taskId,QString &taskName,int &id,QString &name,QString &password,QString &address,QString &email,QString &phone,QString &feedback)
     {
         clientData.id = id;
         clientData.name = name;
@@ -32,6 +34,8 @@ public:
         clientData.email = email;
         clientData.phone = phone;
         clientData.feedback = feedback;
+        clientData.taskId = taskId;
+        clientData.taskName = taskName;
     }
 
 signals:
