@@ -63,6 +63,7 @@ private slots:
     void on_requestsPageBtn_4_clicked();
     void on_workersPageBtn_4_clicked();
     void on_workersPageBtn_3_clicked();
+    void on_requestsPageBtn_3_clicked();
     void on_pushButton_5_clicked();
     void on_pushButton_4_clicked();
     void on_pushButton_2_clicked();
@@ -80,28 +81,17 @@ private slots:
     void on_endDate_3_clicked();
 
     void on_startDate_3_clicked();
-
-    void on_deleteRequest_clicked();
-
-    void on_editRequest_clicked();
-
-    void on_comboBox_2_currentTextChanged(const QString &arg1);
-
-    void on_cancel_clicked();
-
-    void on_edit_2_clicked();
-
-private:
     void onWorkerStartDateSelected(const QDate &date);
     void onWorkerEndDateSelected(const QDate &date);
+
+private:
     ClientData clientData;
     void loadDataInProfile();
-    QFrame* createWorkerCard(int workerId, QString name, QString &taskName,
-                                   QString &locations, const float &rating, const float &calculatedWage);
+
     QDate startDateValue = QDate(2000, 1, 1);
     QDate endDateValue = QDate::currentDate();
-    QDate workerStartDateValue = QDate(2000, 1, 1);
-    QDate workerEndDateValue = QDate::currentDate();
+    QDate workerStartDateValue;
+    QDate workerEndDateValue;
     QCalendarWidget *workerStartDateCalendar = nullptr;
     QCalendarWidget *workerEndDateCalendar = nullptr;
     Ui::Home *ui;
@@ -123,7 +113,7 @@ private:
     QString getAddressForRequest(int requestId);
 
     void setup_request_page();
-    int currentRequestId = -1;
+
     // for workers page
     void loadAllWorkers();
     void setupWorkerCards();

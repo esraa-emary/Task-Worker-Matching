@@ -206,7 +206,8 @@ create table ASSIGNMENT (
                             CLIENTRATING         float                null,
                             STATUS               varchar(100)         null,
                             FEEDBACKBYCLIENT     text                 null,
-                            FEEDBACKBYWORKER     text                 null
+                            FEEDBACKBYWORKER     text                 null,
+                            WAGE                 DECIMAL(10, 2)       null 
 )
     go
 
@@ -422,10 +423,8 @@ GO
 /* View: WorkerTotalWageView                                    */
 /*==============================================================*/
 CREATE VIEW WorkerTotalWageView AS
-SELECT a.WorkerID, w.Name, SUM(t.AvgFee * a.WorkerRating / 5) AS TotalDueWage
+SELECT a.WorkerID, w.Name, SUM(a.Wage) AS TotalDueWage
 FROM Assignment a
-         JOIN Request r ON a.RequestID = r.RequestID
-         JOIN Task t ON r.TaskID = t.TaskID
          JOIN Worker w ON a.WorkerID = w.WorkerID
 WHERE a.Status = 'Completed'
 GROUP BY a.WorkerID, w.Name;
@@ -528,7 +527,7 @@ GO
 /* View: ClientRequestHistoryView                               */
 /*==============================================================*/
 CREATE VIEW ClientRequestHistoryView AS
-SELECT r.ClientID, r.RequestID, t.TaskName, r.RequestTime, a.Status
+SELECT r.ClientID, r.RequestID, t.TaskName, r.RequestTime, a.Status, a.Wage 
 FROM Request r
          JOIN Assignment a ON r.RequestID = a.RequestID
          JOIN Task t ON r.TaskID = t.TaskID;
@@ -719,21 +718,22 @@ END
 GO
 
 -- Request Procedures
-CREATE PROCEDURE CreateRequest
+CREATE OR ALTER PROCEDURE CreateRequest
     @RequestID INT,
     @ClientID INT,
     @TaskID INT,
     @Address VARCHAR(250),
-    @PreferredTimeSlot DATETIME
+    @PreferredTimeSlot DATETIME,
+    @RequestDescription VARCHAR(250) = NULL
 AS
 BEGIN
     IF EXISTS (SELECT 1 FROM CLIENT WHERE CLIENTID = @ClientID)
     AND EXISTS (SELECT 1 FROM TASK WHERE TASKID = @TaskID)
-BEGIN
-INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, PREFERREDTIMESLOT)
-VALUES (@RequestID, @ClientID, @TaskID, @Address, @PreferredTimeSlot)
-END
-ELSE
+    BEGIN
+        INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION)
+        VALUES (@RequestID, @ClientID, @TaskID, @Address, GETDATE(), @PreferredTimeSlot, @RequestDescription)
+    END
+    ELSE
         THROW 50001, 'Invalid ClientID or TaskID', 1
 END
 GO
@@ -881,15 +881,16 @@ CREATE PROCEDURE CreateAssignment
     @RequestID INT,
     @Status VARCHAR(100),
     @WorkerRating FLOAT,
-    @ClientRating FLOAT
+    @ClientRating FLOAT,
+    @Wage DECIMAL(10, 2) = NULL 
 AS
 BEGIN
     IF EXISTS (SELECT 1 FROM WORKER WHERE WORKERID = @WorkerID)
     AND EXISTS (SELECT 1 FROM CLIENT WHERE CLIENTID = @ClientID)
     AND EXISTS (SELECT 1 FROM REQUEST WHERE REQUESTID = @RequestID)
 BEGIN
-INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, STATUS, WORKERRATING, CLIENTRATING)
-VALUES (@WorkerID, @ClientID, @RequestID, @Status, @WorkerRating, @ClientRating)
+INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, STATUS, WORKERRATING, CLIENTRATING, WAGE)
+VALUES (@WorkerID, @ClientID, @RequestID, @Status, @WorkerRating, @ClientRating, @Wage)
 END
 ELSE
         THROW 50002, 'Invalid WorkerID, ClientID, or RequestID', 1
@@ -902,16 +903,18 @@ CREATE PROCEDURE UpdateAssignment
     @RequestID INT,
     @Status VARCHAR(100),
     @WorkerRating FLOAT,
-    @ClientRating FLOAT
+    @ClientRating FLOAT,
+    @Wage DECIMAL(10, 2) = NULL
 AS
 BEGIN
 UPDATE ASSIGNMENT
 SET STATUS = @Status,
     WORKERRATING = @WorkerRating,
-    CLIENTRATING = @ClientRating
+    CLIENTRATING = @ClientRating,
+    WAGE = @Wage
 WHERE WORKERID = @WorkerID
   AND CLIENTID = @ClientID
-  AND REQUESTID = @RequestID
+  AND REQUESTID = @REQUESTID
 END
 GO
 
@@ -924,7 +927,7 @@ BEGIN
 DELETE FROM ASSIGNMENT
 WHERE WORKERID = @WorkerID
   AND CLIENTID = @ClientID
-  AND REQUESTID = @RequestID
+  AND REQUESTID = @REQUESTID
 END
 GO
 
@@ -1003,14 +1006,14 @@ BEGIN
 SELECT
     a.WorkerID,
     w.Name,
-    SUM(t.AvgFee * (a.WorkerRating / 5.0)) AS TotalDueWage
+    SUM(a.Wage) AS TotalDueWage
 FROM Assignment a
          JOIN Request r ON a.RequestID = r.RequestID
-         JOIN Task t ON r.TaskID = t.TaskID
          JOIN Worker w ON a.WorkerID = w.WorkerID
 WHERE
     a.Status = 'Completed'
   AND r.RequestTime BETWEEN @StartDate AND @EndDate
+  AND a.Wage IS NOT NULL
 GROUP BY a.WorkerID, w.Name;
 END
 GO
@@ -1090,59 +1093,39 @@ WHERE Rank = 1;
 END
 GO
 
-CREATE OR ALTER PROCEDURE CreateRequest
-    @RequestID INT,
-    @ClientID INT,
-    @TaskID INT,
-    @Address VARCHAR(250),
-    @PreferredTimeSlot DATETIME
-AS
-BEGIN
-    IF EXISTS (SELECT 1 FROM CLIENT WHERE CLIENTID = @ClientID)
-    AND EXISTS (SELECT 1 FROM TASK WHERE TASKID = @TaskID)
-    BEGIN
-        INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT)
-        VALUES (@RequestID, @ClientID, @TaskID, @Address, GETDATE(), @PreferredTimeSlot)
-    END
-    ELSE
-        THROW 50001, 'Invalid ClientID or TaskID', 1
-END
-GO
-
 INSERT INTO CLIENT (CLIENTID, NAME, PHONE, ADDRESS, EMAIL, OVERALLFEEDBACK, PASSWORD)
-VALUES 
+VALUES
 (1, 'John Doe', '555-123-4567', '123 Main St, City', 'john.doe@email.com', 'Great client!', 'password123'),
 (2, 'Jane Smith', '555-987-6543', '456 Oak Ave, Town', 'jane.smith@email.com', NULL, 'securepass456');
 
 INSERT INTO TASK (TASKID, TASKNAME, AVGTIMETOFINISH, AVGFEE)
-VALUES 
+VALUES
 (1, 'Plumbing Repair', 120, 150.00), -- 120 minutes, $150 avg fee
 (2, 'Electrical Wiring', 180, 200.00); -- 180 minutes, $200 avg fee
 
 INSERT INTO WORKER (WORKERID, REQUESTID, NAME, SPECIALTYNUM, LOCATIONS, AVAILABLESLOTS, RATING)
-VALUES 
+VALUES
 (1, NULL, 'Mike Johnson', 2, 'City, Town', DATEADD(day, 1, GETDATE()), 4.5), -- Available tomorrow
 (2, NULL, 'Sarah Brown', 1, 'City', DATEADD(day, 2, GETDATE()), 4.0); -- Available in 2 days
 
 INSERT INTO PAYMENTINFO (CARDNUMBER, CLIENTID, CARDTYPE, EXPIRATIONDATE, BILLINGADDRESS)
-VALUES 
+VALUES
 ('1234567890123456', 1, 'Visa', '2026-12-31', '123 Main St, City'),
 ('9876543210987654', 2, 'MasterCard', '2027-06-30', '456 Oak Ave, Town');
 
 INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION)
-VALUES 
-(1, 1, 1, '123 Main St, City', GETDATE(), DATEADD(day, 1, GETDATE()), 'Fix leaking pipe in kitchen'),
-(2, 2, 2, '456 Oak Ave, Town', GETDATE(), DATEADD(day, 2, GETDATE()), 'Install new lighting in living room');
+VALUES
+(4, 1, 2, '456 Oak Ave, Town', GETDATE(), DATEADD(day, 2, GETDATE()), 'Install new lighting in living room');
 
 INSERT INTO SPECIALTY (WORKERID, TASKID)
-VALUES 
-(1, 1), -- Mike Johnson specializes in Plumbing Repair
-(2, 2); -- Sarah Brown specializes in Electrical Wiring
+VALUES
+(1, 1),
+(2, 2);
 
-INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, ACTUALTIMETAKEN, WORKERRATING, CLIENTRATING, STATUS, FEEDBACKBYCLIENT, FEEDBACKBYWORKER)
-VALUES 
-(1, 1, 1, 130, 4.8, 4.5, 'Completed', 'Great job fixing the pipe!', 'Client was friendly.'),
-(2, 2, 2, NULL, NULL, NULL, 'In Progress', NULL, NULL);
+INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, ACTUALTIMETAKEN, WORKERRATING, CLIENTRATING, STATUS, FEEDBACKBYCLIENT, FEEDBACKBYWORKER, WAGE)
+VALUES
+(1, 1, 1, 130, 4.8, 4.5, 'Completed', 'Great job fixing the pipe!', 'Client was friendly.', 160.00),
+(2, 2, 2, NULL, NULL, NULL, 'In Progress', NULL, NULL, NULL);
 
 SELECT * FROM CLIENT;
 SELECT * FROM TASK;
