@@ -49,15 +49,9 @@ signals:
     void backToMainWindow();
 
 private slots:
-    void requests();
-    void workers();
-    void profile();
-    void logout();
-    void tasks();
-    void statistics();
-
     void on_workersPageBtn_clicked();
     void on_requestsPageBtn_2_clicked();
+    void on_addRequest_clicked();
     void on_request_clicked();
     void on_logout_clicked();
     void on_pushButton_clicked();
@@ -69,6 +63,7 @@ private slots:
     void on_requestsPageBtn_4_clicked();
     void on_workersPageBtn_4_clicked();
     void on_workersPageBtn_3_clicked();
+    void on_requestsPageBtn_3_clicked();
     void on_pushButton_5_clicked();
     void on_pushButton_4_clicked();
     void on_pushButton_2_clicked();
@@ -82,60 +77,21 @@ private slots:
     void on_requestsPageBtn_7_clicked();
     void on_pushButton_7_clicked();
     void on_requests_clicked();
+
     void on_endDate_3_clicked();
+
     void on_startDate_3_clicked();
-    void on_deleteAccount_clicked();
-    void on_pushButton_8_clicked();
-    void on_pushButton_12_clicked();
-    void on_pushButton_11_clicked();
-    void on_pushButton_10_clicked();
-    void on_pushButton_9_clicked();
-    void on_taskBtn_clicked();
-    void on_taskBtn_2_clicked();
-    void on_taskBtn_3_clicked();
-    void on_taskBtn_4_clicked();
-    void on_taskBtn_5_clicked();
-    void on_taskBtn_6_clicked();
-    void on_taskBtn_7_clicked();
-    void on_workersPageBtn_5_clicked();
-    void on_requestsPageBtn_5_clicked();
-    void on_pushButton_14_clicked();
-    void on_pushButton_13_clicked();
-    void on_taskBtn_8_clicked();
-    void on_workersPageBtn_8_clicked();
-    void on_requestsPageBtn_8_clicked();
-    void on_pushButton_16_clicked();
-    void on_pushButton_15_clicked();
-    void on_statisticBtn_2_clicked();
-    void on_statisticBtn_3_clicked();
-    void on_statisticBtn_4_clicked();
-    void on_statisticBtn_5_clicked();
-    void on_statisticBtn_clicked();
-    void on_statisticBtn_6_clicked();
-    void on_statisticBtn_7_clicked();
-    void on_statisticBtn_8_clicked();
-
-    void on_deleteRequest_clicked();
-
-    void on_editRequest_clicked();
-
-    void on_comboBox_2_currentTextChanged(const QString &arg1);
-
-    void on_cancel_edit_clicked();
-
-    void on_edit_edit_2_clicked();
-
-private:
     void onWorkerStartDateSelected(const QDate &date);
     void onWorkerEndDateSelected(const QDate &date);
+
+private:
     ClientData clientData;
     void loadDataInProfile();
-    QFrame* createWorkerCard(int workerId, QString name, QString &taskName,
-                                   QString &locations, const float &rating, const float &calculatedWage);
+
     QDate startDateValue = QDate(2000, 1, 1);
     QDate endDateValue = QDate::currentDate();
-    QDate workerStartDateValue = QDate(2000, 1, 1);
-    QDate workerEndDateValue = QDate::currentDate();
+    QDate workerStartDateValue;
+    QDate workerEndDateValue;
     QCalendarWidget *workerStartDateCalendar = nullptr;
     QCalendarWidget *workerEndDateCalendar = nullptr;
     Ui::Home *ui;
@@ -157,7 +113,7 @@ private:
     QString getAddressForRequest(int requestId);
 
     void setup_request_page();
-    int currentRequestId = -1;
+
     // for workers page
     void loadAllWorkers();
     void setupWorkerCards();
@@ -176,14 +132,5 @@ private:
     // for client page
     QFrame* createWorkerCardForClient(int workerId, QString name, QString &feedback, const float &rating);
     void loadAllWorkersinClientPage();
-
-    // for tasks page
-    void loadAllTasks();
-    QFrame* createTaskCard(int &taskId, QString &taskName, QString &workersName,int &timeFinish, float &fee);
-    void goToRequestPage(int taskId,QString taskName);
-
-    // for statistics page
-    void loadAllstatistics();
-
 };
 #endif // HOME_H

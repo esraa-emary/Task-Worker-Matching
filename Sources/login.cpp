@@ -58,7 +58,6 @@ void LogIn::on_login_clicked()
 
     QMessageBox::information(this, "Success", "logedin successfully!");
 
-    // send data to home
     clientData.id = clientId;
     clientData.name = name;
     clientData.email = email;
