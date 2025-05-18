@@ -11,12 +11,10 @@
 #include <QCalendarWidget>
 #include <QObject>
 #include <QEvent>
-#include "ui_home.h"
 
 namespace Ui {
 class Home;
 }
-
 class Home : public QMainWindow
 {
     Q_OBJECT
@@ -33,24 +31,7 @@ public:
         QString feedback;
         int id;
     };
-    void setClient(int &id,QString &name,QString &password,QString &address,QString &email,QString &phone,QString &feedback)
-    {
-        clientData.id = id;
-        clientData.name = name;
-        clientData.password = password;
-        clientData.address = address;
-        clientData.email = email;
-        clientData.phone = phone;
-        clientData.feedback = feedback;
-
-        // put data into profile;
-        ui->pushButton_2->setText(clientData.name);
-        ui->pushButton_3->setText(clientData.name);
-        ui->pushButton_4->setText(clientData.name);
-        ui->pushButton_5->setText(clientData.name);
-        ui->pushButton_6->setText(clientData.name);
-        ui->pushButton_7->setText(clientData.name);
-    }
+    void setClient(int &id,QString &name,QString &password,QString &address,QString &email,QString &phone,QString &feedback);
 
 signals:
     void backToMainWindow();
@@ -119,17 +100,14 @@ private:
     void loadAllWorkers();
     void setupWorkerCards();
     QString getAddressForWorker(int workertId);
-<<<<<<< HEAD
     QFrame* createWorkerCard(int workerId,QString name, QString &taskName,
                              QString &locations, const float &rating);
-=======
     QFrame* createWorkerCard(int workerId,QString &taskName,
                              QString &locations,const float &rating);
     QDate workerStartDateValue;
     QDate workerEndDateValue;
     QCalendarWidget *workerStartDateCalendar = nullptr;
     QCalendarWidget *workerEndDateCalendar = nullptr;
->>>>>>> 1cd6aca (before merge)
 
     // for worker page
     void viewWorkerDetails(int workerID);
@@ -141,5 +119,4 @@ private:
     QFrame* createWorkerCardForClient(int workerId, QString name, QString &feedback, const float &rating);
     void loadAllWorkersinClientPage();
 };
-
 #endif // HOME_H

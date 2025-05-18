@@ -47,11 +47,7 @@ QFrame{
 }</string>
       </property>
       <property name="currentIndex">
-<<<<<<< HEAD
-       <number>3</number>
-=======
-       <number>1</number>
->>>>>>> 1cd6aca (before merge)
+       <number>2</number>
       </property>
       <widget class="QWidget" name="requestsPage">
        <property name="styleSheet">

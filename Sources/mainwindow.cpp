@@ -18,8 +18,8 @@ bool connectToDatabase()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
 
-    QString serverName = "DESKTOP-TKK26SO";
-    // QString serverName = "HEFNY";
+    // QString serverName = "DESKTOP-TKK26SO";
+    QString serverName = "HEFNY";
     QString dbName = "TaskWorkerMatching";
 
     QString connectionString = QString(
