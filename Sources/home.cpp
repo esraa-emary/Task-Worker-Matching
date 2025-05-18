@@ -62,7 +62,7 @@ bool Home::connectToDatabase()
 
     while (query.next()) {
         QString task = query.value("taskName").toString();
-        ui->comboBox->addItem(task);
+        ui->comboBox_edit->addItem(task);
     }
     return true;
 }
@@ -384,7 +384,6 @@ void Home::viewRequestDetails(int requestId)
         qDebug() << "Condition met: query.exec() - Query executed successfully for request ID:" << requestId;
     }
 
-    QWidget *requestPage = ui->stackedWidget_2->widget(3);
     // Find RequestPage by object name
     QWidget *requestPage = ui->stackedWidget_2->findChild<QWidget*>("RequestPage");
     if (!requestPage) {
@@ -2850,34 +2849,7 @@ void Home::onWorkerEndDateSelected(const QDate &date)
 }
 
 
-void Home::on_requestsPageBtn_4_clicked()
-{
-    QWidget *requestsPage = ui->stackedWidget_2->findChild<QWidget*>("requestsPage");
 
-    if (requestsPage) {
-        ui->stackedWidget_2->setCurrentWidget(requestsPage);
-    } else {
-        qDebug() << "Error: workersPage not found!";
-    }
-    loadDataInProfile();
-}
-
-void Home::on_workersPageBtn_4_clicked()
-{
-    QWidget *workersPage = ui->stackedWidget_2->findChild<QWidget*>("workersPage");
-
-    if (workersPage) {
-        ui->stackedWidget_2->setCurrentWidget(workersPage);
-    } else {
-        qDebug() << "Error: workersPage not found!";
-    }
-    loadDataInProfile();
-}
-
-void Home::on_workersPageBtn_3_clicked()
-{
-    ui->stackedWidget_2->setCurrentWidget(ui->stackedWidget_2->findChild<QWidget *>("workersPage"));
-}
 void Home::loadDataInProfile() {
     QSqlQuery query;
     query.prepare("SELECT * FROM client WHERE ClientID = :clientId");
