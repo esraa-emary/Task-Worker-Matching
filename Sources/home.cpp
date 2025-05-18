@@ -938,7 +938,7 @@ QString Home::getAddressForRequest(int requestId) {
 void Home::loadAllWorkers()
 {
     // Clear existing content in ui->frame_21
-    QLayout *existingLayout = ui->frame_21->layout();
+    QLayout *existingLayout = ui->frame_23->layout();
     if (existingLayout) {
         QLayoutItem *item;
         while ((item = existingLayout->takeAt(0)) != nullptr) {
@@ -950,7 +950,7 @@ void Home::loadAllWorkers()
     }
 
     // Create a new scroll area
-    QScrollArea *scrollArea = new QScrollArea(ui->frame_21);
+    QScrollArea *scrollArea = new QScrollArea(ui->frame_23);
     if (!scrollArea) {
         qDebug() << "Failed to allocate QScrollArea";
         return;
@@ -1039,9 +1039,9 @@ void Home::loadAllWorkers()
     if (existingLayout) {
         existingLayout->addWidget(scrollArea);
     } else {
-        QVBoxLayout *newLayout = new QVBoxLayout(ui->frame_21);
+        QVBoxLayout *newLayout = new QVBoxLayout(ui->frame_23);
         newLayout->addWidget(scrollArea);
-        ui->frame_21->setLayout(newLayout);
+        ui->frame_23->setLayout(newLayout);
     }
 }
 

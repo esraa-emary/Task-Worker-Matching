@@ -47,7 +47,7 @@ QFrame{
 }</string>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="requestsPage">
        <property name="cursor">
@@ -1893,7 +1893,7 @@ text-align: center;
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="_edit">
+      <widget class="QWidget" name="profilePage">
        <property name="styleSheet">
         <string notr="true"/>
        </property>
