@@ -121,9 +121,9 @@ private slots:
 
     void on_comboBox_2_currentTextChanged(const QString &arg1);
 
-    void on_cancel_clicked();
+    void on_cancel_edit_clicked();
 
-    void on_edit_2_clicked();
+    void on_edit_edit_2_clicked();
 
 private:
     void onWorkerStartDateSelected(const QDate &date);

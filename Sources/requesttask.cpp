@@ -86,23 +86,15 @@ void RequestTask::on_add_clicked()
         return;
     }
 
-    QDateTime startDate = ui->startDate->dateTime();
-    QDateTime endDate = ui->endDate->dateTime();
-    if (startDate >= endDate) {
-        QMessageBox::warning(this, "Error", "End time must be after start time!");
-        return;
-    }
-
+    // Get form data
     QString description = ui->description->text();
     QDateTime preferredTimeSlots = ui->preferredTimeSlots->dateTime();
 
-    QSqlDatabase::database().transaction();
-
-    QSqlQuery query;
-    if (!query.exec("SELECT MAX(requestId) FROM request")) {
-        qDebug() << "Error getting max requestId:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Database error: " + query.lastError().text());
-        QSqlDatabase::database().rollback();
+    // Get next request ID
+    int requestId = 1;
+    QSqlQuery maxIdQuery;
+    if (!maxIdQuery.exec("SELECT MAX(requestId) FROM request")) {
+        QMessageBox::critical(this, "Database Error", "Could not get request ID:\n" + maxIdQuery.lastError().text());
         return;
     }
     if (maxIdQuery.next()) {
@@ -112,99 +104,60 @@ void RequestTask::on_add_clicked()
         }
     }
 
-    query.prepare("SELECT taskId FROM task WHERE taskName = :task");
-    query.bindValue(":task", task);
-    if (!query.exec() || !query.next()) {
-        qDebug() << "Error fetching taskId for task:" << task;
-        QMessageBox::critical(this, "Error", "Invalid task selected");
-        QSqlDatabase::database().rollback();
+    // Insert into request table
+    QSqlQuery insertQuery;
+    insertQuery.prepare(R"(
+        INSERT INTO request (requestId, clientId, taskId, address, requestTime, preferredTimeSlot, requestDescription)
+        VALUES (:requestId, :clientId, :taskId, :address, :requestTime, :preferredTimeSlot, :description)
+    )");
+
+    insertQuery.bindValue(":requestId", requestId);
+    insertQuery.bindValue(":clientId", clientData.id);
+    insertQuery.bindValue(":taskId", clientData.taskId);
+    insertQuery.bindValue(":address", clientData.address);
+    insertQuery.bindValue(":requestTime", QDateTime::currentDateTime());
+    insertQuery.bindValue(":preferredTimeSlot", preferredTimeSlots);
+    insertQuery.bindValue(":description", description);
+
+    if (!insertQuery.exec()) {
+        QMessageBox::critical(this, "Insert Error", "Failed to save request:\n" + insertQuery.lastError().text());
+        return;
+    }
+
+    // Get selected worker's ID
+    QString workerName = ui->comboBox->currentText();
+    QSqlQuery workerQuery;
+    workerQuery.prepare("SELECT workerId FROM worker WHERE NAME = :workerName");
+    workerQuery.bindValue(":workerName", workerName);
+
+    if (!workerQuery.exec()) {
+        QMessageBox::critical(this, "Database Error", "Failed to get worker ID:\n" + workerQuery.lastError().text());
+        return;
+    }
+
+    if (!workerQuery.next()) {
+        QMessageBox::critical(this, "Error", "Selected worker not found in the database.");
         return;
     }
 
     int workerId = workerQuery.value(0).toInt();
 
-    query.prepare(
-        "INSERT INTO request (requestId, clientId, taskId, address, "
-        "requestTime, preferredTimeSlot, requestDescription) "
-        "VALUES (:requestId, :clientId, :taskId, :address, "
-        ":requestTime, :preferredTimeSlot, :description)"
-        );
-    query.bindValue(":requestId", requestId);
-    query.bindValue(":clientId", clientData.id);
-    query.bindValue(":taskId", taskId);
-    query.bindValue(":address", clientData.address);
-    query.bindValue(":requestTime", QDateTime::currentDateTime().toTimeZone(QTimeZone("Europe/Athens")));
-    query.bindValue(":preferredTimeSlot", preferredTimeSlots);
-    query.bindValue(":description", description.isEmpty() ? QVariant(QVariant::String) : description);
+    // Insert into assignment table
+    QSqlQuery assignmentQuery;
+    assignmentQuery.prepare(R"(
+        INSERT INTO assignment (workerId, clientId, requestId, status)
+        VALUES (:workerId, :clientId, :requestId, 'In Progress')
+    )");
 
-    if (!query.exec()) {
-        qDebug() << "Error inserting request:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Failed to save request: " + query.lastError().text());
-        QSqlDatabase::database().rollback();
-        return;
-    }
+    assignmentQuery.bindValue(":workerId", workerId);
+    assignmentQuery.bindValue(":clientId", clientData.id);
+    assignmentQuery.bindValue(":requestId", requestId);
 
-    query.prepare(
-        "SELECT w.WorkerID, w.Rating, COUNT(a.RequestID) as AssignmentCount "
-        "FROM Worker w "
-        "JOIN Specialty s ON w.WorkerID = s.WorkerID "
-        "LEFT JOIN Assignment a ON w.WorkerID = a.WorkerID "
-        "WHERE s.TaskID = :taskId "
-        "GROUP BY w.WorkerID, w.Rating "
-        "HAVING COUNT(a.RequestID) < 5 "
-        "ORDER BY w.Rating DESC"
-        );
-    query.bindValue(":taskId", taskId);
-    if (!query.exec()) {
-        qDebug() << "Error finding eligible worker:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Failed to find eligible worker: " + query.lastError().text());
-        QSqlDatabase::database().rollback();
-        return;
-    }
-
-    int workerId = -1;
-    if (query.next()) {
-        workerId = query.value("WorkerID").toInt();
-    } else {
-        qDebug() << "No eligible worker found for taskId:" << taskId;
-        QMessageBox::warning(this, "Warning", "No available worker found with the required specialty. Request added without assignment.");
-        if (!QSqlDatabase::database().commit()) {
-            qDebug() << "Transaction commit failed.";
-            QMessageBox::critical(this, "Error", "Failed to commit transaction.");
-            QSqlDatabase::database().rollback();
-            return;
-        }
-        QMessageBox::information(this, "Success", "Request added successfully!");
-        emit backToHome();
-        this->close();
-        return;
-    }
-
-    query.prepare(
-        "INSERT INTO Assignment (WorkerID, ClientID, RequestID, Status) "
-        "VALUES (:workerId, :clientId, :requestId, :status)"
-        );
-    query.bindValue(":workerId", workerId);
-    query.bindValue(":clientId", clientData.id);
-    query.bindValue(":requestId", requestId);
-    query.bindValue(":status", "Pending");
-
-    if (!query.exec()) {
-        qDebug() << "Error inserting assignment:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Failed to create assignment: " + query.lastError().text());
-        QSqlDatabase::database().rollback();
-        return;
-    }
-
-    if (!QSqlDatabase::database().commit()) {
-        qDebug() << "Transaction commit failed.";
-        QMessageBox::critical(this, "Error", "Failed to commit transaction.");
-        QSqlDatabase::database().rollback();
+    if (!assignmentQuery.exec()) {
+        QMessageBox::critical(this, "Insert Error", "Failed to create assignment:\n" + assignmentQuery.lastError().text());
         return;
     }
 
     QMessageBox::information(this, "Success", "Request and assignment added successfully!");
-
-    emit backToHome();
     this->close();
 }

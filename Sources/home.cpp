@@ -838,22 +838,6 @@ void Home::viewRequestDetails(int requestId)
                 }
             }
 
-                // Add vertical spacer at the end to push everything above upwards
-                workersLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
-
-                // Ensure mainFrame has a layout if not present
-                QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(mainFrame->layout());
-                if (!mainLayout) {
-                    mainLayout = new QVBoxLayout(mainFrame);
-                    mainFrame->setLayout(mainLayout);
-                    mainLayout->addWidget(contentFrame);
-                    mainLayout->addWidget(workersListFrame);
-                }
-            }
-        }
-
-        // Switch to requestPage
-        ui->stackedWidget_2->setCurrentIndex(3);
             // Add vertical spacer at the end to push everything above upwards
             // Ensure the spacer is added *after* all worker widgets
             workersLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -904,7 +888,6 @@ void Home::viewRequestDetails(int requestId)
                              "Could not find details for the selected request.");
     }
 }
-
 void Home::setupRequestCards()
 {
     if (connectToDatabase()) {
@@ -2723,16 +2706,6 @@ Home::~Home()
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // for buttons
 
-void Home::on_startDate_3_clicked()
-{
-
-}
-
-void Home::on_endDate_3_clicked()
-{
-
-}
-
 void Home::on_filterName_clicked()
 {
 
@@ -3152,7 +3125,6 @@ void Home::on_workersPageBtn_6_clicked(){workers();}
 void Home::on_pushButton_6_clicked(){profile();}
 void Home::on_workersPageBtn_7_clicked(){workers();}
 void Home::on_requestsPageBtn_7_clicked(){requests();}
-void Home::on_requestsPageBtn_3_clicked(){requests();}
 void Home::on_pushButton_7_clicked(){profile();}
 void Home::on_taskBtn_8_clicked(){tasks();}
 void Home::on_workersPageBtn_8_clicked(){workers();}
@@ -3252,10 +3224,10 @@ void Home::on_editRequest_clicked()
     ui->stackedWidget_2->setCurrentWidget(editPage);
 
     // Find UI elements
-    QComboBox *taskCombo = editPage->findChild<QComboBox*>("comboBox_2");
-    QLineEdit *descriptionEdit = editPage->findChild<QLineEdit*>("description_2");
-    QDateTimeEdit *startDateEdit = editPage->findChild<QDateTimeEdit*>("startDate_2");
-    QDateTimeEdit *endDateEdit = editPage->findChild<QDateTimeEdit*>("endDate_2");
+    QComboBox *taskCombo = editPage->findChild<QComboBox*>("comboBox_edit_2");
+    QLineEdit *descriptionEdit = editPage->findChild<QLineEdit*>("description_edit_2");
+    QDateTimeEdit *startDateEdit = editPage->findChild<QDateTimeEdit*>("startDate_edit_2");
+    QDateTimeEdit *endDateEdit = editPage->findChild<QDateTimeEdit*>("endDate_edit_2");
     QDateTimeEdit *preferredTimeSlotEdit = editPage->findChild<QDateTimeEdit*>("preferredTimeSlots");
 
     // Validate UI elements
@@ -3319,14 +3291,13 @@ void Home::on_comboBox_2_currentTextChanged(const QString &arg1)
 }
 
 
-void Home::on_cancel_clicked()
+void Home::on_cancel_edit_clicked()
 {
     viewRequestDetails(currentRequestId);
 }
 
 
-
-void Home::on_edit_2_clicked()
+void Home::on_edit_edit_2_clicked()
 {
     // Validate current request ID
     if (currentRequestId <= 0) {
@@ -3558,3 +3529,4 @@ void Home::on_edit_2_clicked()
     loadAllRequests();
     ui->stackedWidget_2->setCurrentWidget(ui->stackedWidget_2->findChild<QWidget*>("requestsPage"));
 }
+

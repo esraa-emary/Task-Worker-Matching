@@ -47,7 +47,7 @@ QFrame{
 }</string>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="requestsPage">
        <property name="cursor">
@@ -3707,7 +3707,7 @@ text-align: center;
         <item>
          <widget class="QFrame" name="frame_edit_51">
           <property name="styleSheet">
-           <string notr="true">#frame_51 {
+           <string notr="true">#frame_edit_51 {
                 background: qradialgradient(
                     cx: 0.5, cy: 0.5,
                     fx: 0.5, fy: 0.5,
@@ -3804,6 +3804,7 @@ text-align: center;
                     border: 1px solid #fff;
                     padding-left: 10px;
                     background-color: #FDEEDC;
+				color:#E38B29;
                 }
 
                 QLabel{
@@ -3815,7 +3816,9 @@ text-align: center;
                 QComboBox::drop-down,QComboBox::down-arrow  {
                     margin:20px;
                 }
-
+				QComboBox{
+background-color: #FDEEDC;
+}
                 QPushButton{
                     border: 1px solid #FFD8A9;
                     background-color: #FFD8A9;
@@ -3828,7 +3831,10 @@ text-align: center;
                 border: 1px solid #9c6644;
                     color:#FFD8A9;
                 transition: all 0.3s ease-in-out;
-                }</string>
+                }
+QDateTimeEdit{
+	color:#E38B29;
+}</string>
                 </property>
                 <property name="frameShape">
                  <enum>QFrame::Shape::StyledPanel</enum>
@@ -3932,7 +3938,7 @@ text-align: center;
                         border: 1px solid #fff;
                         padding-left:10px;
                         background-color: #FDEEDC;
-
+						color: #E38B29;
                     border-radius: 15px;
                     }</string>
                    </property>
