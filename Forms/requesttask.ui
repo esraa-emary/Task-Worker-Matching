@@ -50,7 +50,7 @@ QLineEdit{
          <property name="maximumSize">
           <size>
            <width>410</width>
-           <height>700</height>
+           <height>500</height>
           </size>
          </property>
          <property name="frameShape">
@@ -85,15 +85,16 @@ QLineEdit{
             </property>
            </widget>
           </item>
-          <item row="1" column="0" colspan="2">
+          <item row="2" column="0" colspan="2">
            <widget class="QFrame" name="frame_2">
             <property name="styleSheet">
              <string notr="true">QLineEdit,QComboBox,QDateTimeEdit {
-    height: 60px;
+    height: 50px;
     border-radius: 5px;
     border: 1px solid #fff;
     padding-left: 10px;
     background-color: #FDEEDC;
+	color:#E38B29;
 }
 
 QLabel{
@@ -110,7 +111,7 @@ QPushButton{
 	border: 1px solid #FFD8A9;
     height: 20px;
     background-color: #FFD8A9;
-border-radius: 30px;
+border-radius: 20px;
 color:#E38B29;
 }
 
@@ -131,26 +132,7 @@ transition: all 0.3s ease-in-out;
              <property name="topMargin">
               <number>9</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label">
-               <property name="font">
-                <font>
-                 <pointsize>12</pointsize>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Preferred Time Slots</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-               <property name="indent">
-                <number>10</number>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0" colspan="2">
+             <item row="1" column="0" colspan="2">
               <widget class="QComboBox" name="comboBox">
                <property name="font">
                 <font>
@@ -165,73 +147,7 @@ transition: all 0.3s ease-in-out;
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QDateTimeEdit" name="endDate"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_2">
-               <property name="font">
-                <font>
-                 <pointsize>12</pointsize>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Start Date</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-               <property name="indent">
-                <number>10</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDateTimeEdit" name="startDate"/>
-             </item>
-             <item row="7" column="1">
-              <widget class="QPushButton" name="cancel">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>60</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>20</pointsize>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>Cancel</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_3">
-               <property name="font">
-                <font>
-                 <pointsize>12</pointsize>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>End Date</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-               <property name="indent">
-                <number>10</number>
-               </property>
-              </widget>
-             </item>
-             <item row="7" column="0">
+             <item row="8" column="0">
               <widget class="QPushButton" name="add">
                <property name="maximumSize">
                 <size>
@@ -253,14 +169,34 @@ transition: all 0.3s ease-in-out;
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="3" column="0">
+              <widget class="QLabel" name="label">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Preferred Time Slots</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+               <property name="indent">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
               <widget class="QDateTimeEdit" name="preferredTimeSlots"/>
              </item>
-             <item row="3" column="0" colspan="2">
+             <item row="2" column="0" colspan="2">
               <widget class="QLineEdit" name="description">
                <property name="font">
                 <font>
                  <pointsize>12</pointsize>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="styleSheet">
@@ -276,6 +212,43 @@ border-radius: 15px;
                </property>
                <property name="placeholderText">
                 <string>Request Description</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="1">
+              <widget class="QPushButton" name="cancel">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>20</pointsize>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>Cancel</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" colspan="2">
+              <widget class="QLineEdit" name="taskName">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Task Name</string>
                </property>
               </widget>
              </item>
@@ -301,7 +274,7 @@ border-radius: 15px;
 	border: 1px solid #FFD8A9;
     height: 20px;
     background-color: #FFD8A9;
-border-radius: 30px;
+border-radius: 20px;
 color:#E38B29;
 }
 
@@ -326,8 +299,8 @@ transition: all 0.3s ease-in-out;
         <widget class="QPushButton" name="back">
          <property name="maximumSize">
           <size>
-           <width>410</width>
-           <height>75</height>
+           <width>200</width>
+           <height>50</height>
           </size>
          </property>
          <property name="font">

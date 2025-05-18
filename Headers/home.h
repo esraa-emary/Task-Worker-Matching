@@ -37,9 +37,15 @@ signals:
     void backToMainWindow();
 
 private slots:
+    void requests();
+    void workers();
+    void profile();
+    void logout();
+    void tasks();
+    void statistics();
+
     void on_workersPageBtn_clicked();
     void on_requestsPageBtn_2_clicked();
-    void on_addRequest_clicked();
     void on_request_clicked();
     void on_logout_clicked();
     void on_pushButton_clicked();
@@ -65,10 +71,38 @@ private slots:
     void on_requestsPageBtn_7_clicked();
     void on_pushButton_7_clicked();
     void on_requests_clicked();
-
     void on_endDate_3_clicked();
-
     void on_startDate_3_clicked();
+    void on_deleteAccount_clicked();
+    void on_pushButton_8_clicked();
+    void on_pushButton_12_clicked();
+    void on_pushButton_11_clicked();
+    void on_pushButton_10_clicked();
+    void on_pushButton_9_clicked();
+    void on_taskBtn_clicked();
+    void on_taskBtn_2_clicked();
+    void on_taskBtn_3_clicked();
+    void on_taskBtn_4_clicked();
+    void on_taskBtn_5_clicked();
+    void on_taskBtn_6_clicked();
+    void on_taskBtn_7_clicked();
+    void on_workersPageBtn_5_clicked();
+    void on_requestsPageBtn_5_clicked();
+    void on_pushButton_14_clicked();
+    void on_pushButton_13_clicked();
+    void on_taskBtn_8_clicked();
+    void on_workersPageBtn_8_clicked();
+    void on_requestsPageBtn_8_clicked();
+    void on_pushButton_16_clicked();
+    void on_pushButton_15_clicked();
+    void on_statisticBtn_2_clicked();
+    void on_statisticBtn_3_clicked();
+    void on_statisticBtn_4_clicked();
+    void on_statisticBtn_5_clicked();
+    void on_statisticBtn_clicked();
+    void on_statisticBtn_6_clicked();
+    void on_statisticBtn_7_clicked();
+    void on_statisticBtn_8_clicked();
 
 private:
     ClientData clientData;
@@ -118,5 +152,14 @@ private:
     // for client page
     QFrame* createWorkerCardForClient(int workerId, QString name, QString &feedback, const float &rating);
     void loadAllWorkersinClientPage();
+
+    // for tasks page
+    void loadAllTasks();
+    QFrame* createTaskCard(int &taskId, QString &taskName, QString &workersName,int &timeFinish, float &fee);
+    void goToRequestPage(int taskId,QString taskName);
+
+    // for statistics page
+    void loadAllstatistics();
+
 };
 #endif // HOME_H

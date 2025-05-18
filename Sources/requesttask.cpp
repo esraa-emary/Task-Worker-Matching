@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QMessageBox>
 
-RequestTask::RequestTask(QMainWindow *parent)
+RequestTask::RequestTask(QMainWindow *parent,int taskId,QString taskName)
     : QMainWindow(parent)
     , ui(new Ui::RequestTask)
 {
@@ -36,18 +36,31 @@ RequestTask::RequestTask(QMainWindow *parent)
     }
 
     QSqlQuery query;
-    query.prepare("SELECT taskName FROM task");
+    query.prepare(R"(
+    SELECT DISTINCT WORKER.NAME
+    FROM WORKER
+    JOIN SPECIALTY ON WORKER.WORKERID = SPECIALTY.WORKERID
+    JOIN TASK ON TASK.TASKID = SPECIALTY.TASKID
+    WHERE TASK.TASKID = :taskId
+)");
+
+    query.bindValue(":taskId", taskId);
+
     if (!query.exec()) {
         qDebug() << "Error executing query:" << query.lastError().text();
         QMessageBox::critical(this, "Database Error",
-                              "Could not fetch tasks: " + query.lastError().text());
+                              "Could not fetch workers:\n" + query.lastError().text());
         return;
     }
 
+    ui->comboBox->clear();
+
     while (query.next()) {
-        QString task = query.value("taskName").toString();
-        ui->comboBox->addItem(task);
+        QString workerName = query.value(0).toString();  // Use index 0 for performance
+        ui->comboBox->addItem(workerName);
     }
+
+    ui->taskName->setText(taskName);
 }
 
 RequestTask::~RequestTask()
@@ -57,76 +70,94 @@ RequestTask::~RequestTask()
 
 void RequestTask::on_cancel_clicked()
 {
-    emit backToHome();
     this->close();
 }
 
 void RequestTask::on_back_clicked()
 {
-    emit backToHome();
     this->close();
 }
 
 void RequestTask::on_add_clicked()
 {
+    // Validate task selection
     if (ui->comboBox->currentIndex() == -1) {
-        QMessageBox::warning(this, "Error", "Please select a task!");
+        QMessageBox::warning(this, "Input Error", "Please select a worker.");
         return;
     }
 
-    QDateTime startDate = ui->startDate->dateTime();
-    QDateTime endDate = ui->endDate->dateTime();
-
-    if (startDate >= endDate) {
-        QMessageBox::warning(this, "Error", "End time must be after start time!");
-        return;
-    }
-
+    // Get form data
     QString description = ui->description->text();
-    QString task = ui->comboBox->currentText();
     QDateTime preferredTimeSlots = ui->preferredTimeSlots->dateTime();
 
-    QSqlQuery query;
-    if (!query.exec("SELECT MAX(requestId) FROM request")) {
-        QMessageBox::critical(this, "Error", "Database error: " + query.lastError().text());
+    // Get next request ID
+    int requestId = 1;
+    QSqlQuery maxIdQuery;
+    if (!maxIdQuery.exec("SELECT MAX(requestId) FROM request")) {
+        QMessageBox::critical(this, "Database Error", "Could not get request ID:\n" + maxIdQuery.lastError().text());
         return;
     }
-
-    int requestId = 1;
-    if (query.next()) {
-        QVariant maxIdVar = query.value(0);
-        if (maxIdVar.isValid() && !maxIdVar.isNull()) {
-            requestId = maxIdVar.toInt() + 1;
+    if (maxIdQuery.next()) {
+        QVariant maxId = maxIdQuery.value(0);
+        if (maxId.isValid() && !maxId.isNull()) {
+            requestId = maxId.toInt() + 1;
         }
     }
 
-    query.prepare("SELECT taskId FROM task WHERE taskName = :task");
-    query.bindValue(":task", task);
-    if (!query.exec() || !query.next()) {
-        QMessageBox::critical(this, "Error", "Invalid task selected");
-        return;
-    }
-    int taskId = query.value(0).toInt();
+    // Insert into request table
+    QSqlQuery insertQuery;
+    insertQuery.prepare(R"(
+        INSERT INTO request (requestId, clientId, taskId, address, requestTime, preferredTimeSlot, requestDescription)
+        VALUES (:requestId, :clientId, :taskId, :address, :requestTime, :preferredTimeSlot, :description)
+    )");
 
-    query.prepare("INSERT INTO request (requestId, clientId, taskId, address, "
-                  "requestTime, preferredTimeSlot, requestDescription) "
-                  "VALUES (:requestId, :clientId, :taskId, :address, "
-                  ":requestTime, :preferredTimeSlot, :description)");
+    insertQuery.bindValue(":requestId", requestId);
+    insertQuery.bindValue(":clientId", clientData.id);
+    insertQuery.bindValue(":taskId", clientData.taskId);
+    insertQuery.bindValue(":address", clientData.address);
+    insertQuery.bindValue(":requestTime", QDateTime::currentDateTime());
+    insertQuery.bindValue(":preferredTimeSlot", preferredTimeSlots);
+    insertQuery.bindValue(":description", description);
 
-    query.bindValue(":requestId", requestId);
-    query.bindValue(":clientId", clientData.id);
-    query.bindValue(":taskId", taskId);
-    query.bindValue(":address", clientData.address);
-    query.bindValue(":requestTime", QDateTime::currentDateTime());
-    query.bindValue(":preferredTimeSlot", preferredTimeSlots);
-    query.bindValue(":description", description);
-
-    if (!query.exec()) {
-        QMessageBox::critical(this, "Error", "Failed to save request: " + query.lastError().text());
+    if (!insertQuery.exec()) {
+        QMessageBox::critical(this, "Insert Error", "Failed to save request:\n" + insertQuery.lastError().text());
         return;
     }
 
-    QMessageBox::information(this, "Success", "Request added successfully!");
-    emit backToHome();
+    // Get selected worker's ID
+    QString workerName = ui->comboBox->currentText();
+    QSqlQuery workerQuery;
+    workerQuery.prepare("SELECT workerId FROM worker WHERE NAME = :workerName");
+    workerQuery.bindValue(":workerName", workerName);
+
+    if (!workerQuery.exec()) {
+        QMessageBox::critical(this, "Database Error", "Failed to get worker ID:\n" + workerQuery.lastError().text());
+        return;
+    }
+
+    if (!workerQuery.next()) {
+        QMessageBox::critical(this, "Error", "Selected worker not found in the database.");
+        return;
+    }
+
+    int workerId = workerQuery.value(0).toInt();
+
+    // Insert into assignment table
+    QSqlQuery assignmentQuery;
+    assignmentQuery.prepare(R"(
+        INSERT INTO assignment (workerId, clientId, requestId, status)
+        VALUES (:workerId, :clientId, :requestId, 'In Progress')
+    )");
+
+    assignmentQuery.bindValue(":workerId", workerId);
+    assignmentQuery.bindValue(":clientId", clientData.id);
+    assignmentQuery.bindValue(":requestId", requestId);
+
+    if (!assignmentQuery.exec()) {
+        QMessageBox::critical(this, "Insert Error", "Failed to create assignment:\n" + assignmentQuery.lastError().text());
+        return;
+    }
+
+    QMessageBox::information(this, "Success", "Request and assignment added successfully!");
     this->close();
 }
