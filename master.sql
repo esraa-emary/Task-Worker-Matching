@@ -1006,18 +1006,34 @@ VALUES
 
 INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION)
 VALUES
-(4, 1, 2, '456 Oak Ave, Town', GETDATE(), DATEADD(day, 2, GETDATE()), 'Install new lighting in living room');
+(1, 1, 1, '123 Main St, City', GETDATE(), DATEADD(day, 1, GETDATE()), 'Fix leaking faucet in kitchen'),
+(2, 2, 2, '456 Oak Ave, Town', DATEADD(hour, -2, GETDATE()), DATEADD(day, 2, GETDATE()), 'Install new ceiling fan in bedroom'),
+(3, 1, 2, '789 Pine Rd, Village', DATEADD(hour, -4, GETDATE()), DATEADD(day, 3, GETDATE()), 'Upgrade electrical panel in garage'),
+(4, 2, 1, '321 Elm St, Hamlet', GETDATE(), DATEADD(day, 4, GETDATE()), 'Repair burst pipe in bathroom'),
+(5, 1, 2, '654 Maple Ave, City', DATEADD(hour, -1, GETDATE()), DATEADD(day, 5, GETDATE()), 'Fix flickering lights in living room'),
+(6, 2, 1, '987 Cedar Ln, Town', DATEADD(hour, -3, GETDATE()), DATEADD(day, 6, GETDATE()), 'Replace water heater'),
+(7, 1, 2, '147 Birch St, Village', GETDATE(), DATEADD(day, 7, GETDATE()), 'Install outdoor lighting'),
+(8, 2, 1, '258 Oakwood Dr, Hamlet', DATEADD(hour, -5, GETDATE()), DATEADD(day, 8, GETDATE()), 'Fix clogged drain'),
+(9, 1, 2, '369 Willow Rd, City', DATEADD(hour, -6, GETDATE()), DATEADD(day, 9, GETDATE()), 'Repair circuit breaker'),
+(10, 2, 1, '741 Spruce Ave, Town', GETDATE(), DATEADD(day, 10, GETDATE()), 'Install new sink');
+
+INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, ACTUALTIMETAKEN, WORKERRATING, CLIENTRATING, STATUS, FEEDBACKBYCLIENT, FEEDBACKBYWORKER, WAGE)
+VALUES
+(1, 1, 1, 125, 4.7, 4.6, 'Completed', 'Excellent plumbing work!', 'Client was cooperative.', 155.00),
+(2, 2, 2, 175, NULL, NULL, 'In Progress', NULL, NULL, NULL),
+(2, 1, 3, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
+(1, 2, 4, 130, 4.4, 4.3, 'Completed', 'Quick and efficient!', 'Easy to work with.', 145.00),
+(2, 1, 5, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
+(1, 2, 6, 115, NULL, NULL, 'In Progress', NULL, NULL, NULL),
+(2, 1, 7, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
+(1, 2, 8, 140, 4.6, 4.5, 'Completed', 'Very professional!', 'Client provided clear instructions.', 160.00),
+(2, 1, 9, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
+(1, 2, 10, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL);
 
 INSERT INTO SPECIALTY (WORKERID, TASKID)
 VALUES
 (1, 1),
 (2, 2);
-
-INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, ACTUALTIMETAKEN, WORKERRATING, CLIENTRATING, STATUS, FEEDBACKBYCLIENT, FEEDBACKBYWORKER, WAGE)
-VALUES
-(1, 1, 1, 130, 4.8, 4.5, 'Completed', 'Great job fixing the pipe!', 'Client was friendly.', 160.00),
-(2, 2, 2, NULL, NULL, NULL, 'In Progress', NULL, NULL, NULL);
-
 SELECT * FROM CLIENT;
 SELECT * FROM TASK;
 SELECT * FROM WORKER;

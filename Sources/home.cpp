@@ -3016,14 +3016,31 @@ void Home::on_endDate_clicked()
 
 void Home::on_deleteAccount_clicked()
 {
-    QSqlQuery query;
-    query.prepare("DELETE FROM Client WHERE ClientID = :clientId");
-    query.bindValue(":clientId", clientData.id);
+    try {
+        QSqlQuery query;
 
-    if (query.exec()) {
-        QMessageBox::information(this, "Success", "Deleyed successfully!");
+        // Delete assignments
+        query.prepare("DELETE FROM ASSIGNMENT WHERE CLIENTID = :clientId");
+        query.bindValue(":clientId", clientData.id);
+        if (!query.exec()) throw query.lastError();
+
+        // Delete requests
+        query.prepare("DELETE FROM REQUEST WHERE CLIENTID = :clientId");
+        query.bindValue(":clientId", clientData.id);
+        if (!query.exec()) throw query.lastError();
+
+        // Finally delete the client
+        query.prepare("DELETE FROM CLIENT WHERE CLIENTID = :clientId");
+        query.bindValue(":clientId", clientData.id);
+        if (!query.exec()) throw query.lastError();
+
+        QSqlDatabase::database().commit(); // Commit the transaction
+        QMessageBox::information(this, "Success", "Client and all related data deleted successfully!");
         emit backToMainWindow();
         this->close();
+    } catch (const QSqlError &error) {
+        QSqlDatabase::database().rollback(); // Rollback on error
+        QMessageBox::critical(this, "Error", "Failed to delete client: " + error.text());
     }
 }
 
