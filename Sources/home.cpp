@@ -25,6 +25,7 @@ void Home::setClient(int &id,QString &name,QString &password,QString &address,QS
     ui->pushButton_5->setText(clientData.name);
     ui->pushButton_6->setText(clientData.name);
     ui->pushButton_7->setText(clientData.name);
+    setupRequestCards();
 }
 bool Home::connectToDatabase()
 {
@@ -135,13 +136,12 @@ void Home::loadAllRequests()
         "FROM Request r "
         "LEFT JOIN Assignment a ON r.RequestID = a.RequestID "
         "JOIN Task t ON r.TaskID = t.TaskID "
-        "WHERE r.RequestTime >= :startDate AND r.RequestTime < :endDate "
+        "WHERE r.RequestTime >= :startDate AND r.RequestTime < :endDate AND r.CLIENTID = :clientid "
         "ORDER BY r.RequestTime"
         );
-
     query.bindValue(":startDate", startDateValue.isValid() ? startDateValue : QDate(2000, 1, 1));
     query.bindValue(":endDate", endDateValue.isValid() ? endDateValue.addDays(1) : QDate(2100, 12, 31));
-
+    query.bindValue(":clientid",clientData.id);
     if (!query.exec()) {
         qDebug() << "Error executing query:" << query.lastError().text();
         QMessageBox::critical(this, "Database Error",
@@ -1483,7 +1483,7 @@ void Home::loadAllClients(int workerId) {
     QSqlQuery query;
     query.prepare("SELECT NAME, CLIENT.CLIENTID, WORKERRATING, FEEDBACKBYCLIENT "
                   "FROM ASSIGNMENT, CLIENT "
-                  "WHERE ASSIGNMENT.CLIENTID = CLIENT.CLIENTID AND WORKERID = :workerId "
+                  "WHERE ASSIGNMENT.CLIENTID = CLIENT.CLIENTID AND WORKERID = :workerId AND ASSIGNMENT.STATUS = 'Completed' "
                   "ORDER BY WORKERRATING");
     query.bindValue(":workerId", workerId);
 
@@ -1586,18 +1586,16 @@ void Home::viewWorkerDetails(int workerId) {
             backButton->setStyleSheet(
                 "QPushButton {"
                 "   background-color: #E38B29;"
-                "   border-radius: 5px;"
-                "   border: none;"
+                "   border-radius: 22px;"
                 "}"
                 "QPushButton:hover {"
                 "   background-color: #C37422;"
                 "}"
                 );
-
-            // Use QIcon directly from SVG resource
             backButton->setIcon(QIcon(":/new/svgs/back.svg"));
-            backButton->setIconSize(QSize(50, 38));
-            backButton->setFixedSize(50, 38);
+            backButton->setIconSize(QSize(25, 27));
+            backButton->setFixedSize(50, 44);
+            backButton->setCursor(Qt::PointingHandCursor);
 
             // Wrap in a container layout
             QWidget *backContainer = new QWidget;
@@ -1939,18 +1937,16 @@ void Home::on_requests_clicked()
         backButton->setStyleSheet(
             "QPushButton {"
             "   background-color: #E38B29;"
-            "   border-radius: 5px;"
-            "   border: none;"
+            "   border-radius: 22px;"
             "}"
             "QPushButton:hover {"
             "   background-color: #C37422;"
             "}"
             );
-
-        // Use QIcon directly from SVG resource
         backButton->setIcon(QIcon(":/new/svgs/back.svg"));
-        backButton->setIconSize(QSize(50, 38));
-        backButton->setFixedSize(50, 38);
+        backButton->setIconSize(QSize(25, 27));
+        backButton->setFixedSize(50, 44);
+        backButton->setCursor(Qt::PointingHandCursor);
 
         // Wrap in a container layout
         QWidget *backContainer = new QWidget;
@@ -2038,6 +2034,10 @@ void Home::goToRequestPage(int taskId,QString taskName){
     requestTask = new RequestTask(this,taskId,taskName);
     requestTask->setClient(taskId,taskName, clientData.id, clientData.name, clientData.password, clientData.address, clientData.email, clientData.phone,clientData.feedback);
     requestTask->show();
+    connect(requestTask, &RequestTask::backToHome, this, [this]() {
+        this->show();
+        this->loadAllRequests();
+    });
     this->hide();
 }
 
@@ -2123,7 +2123,7 @@ QFrame* Home::createTaskCard(int &taskId, QString &taskName, QString &workersNam
     cardLayout->addWidget(feeLabel);
     cardLayout->addWidget(workerLabel);
 
-    card->setFixedHeight(90);
+    card->setFixedHeight(150);
     card->setProperty("taskId", taskId);
     card->setProperty("taskName", taskName);
     card->installEventFilter(this);
@@ -2565,8 +2565,6 @@ Home::Home(QWidget *parent)
     ui->workersPageBtn_2->setCursor(Qt::PointingHandCursor);
     ui->startDate->setCursor(Qt::PointingHandCursor);
     ui->endDate->setCursor(Qt::PointingHandCursor);
-    ui->filterName->setCursor(Qt::PointingHandCursor);
-
     // Setup profile icon in worker
     QSvgWidget *profileIcon3 = new QSvgWidget(":/new/svgs/Group.svg");
     profileIcon3->setFixedSize(58, 58);
@@ -2661,7 +2659,6 @@ Home::Home(QWidget *parent)
     ui->endDate_3->setIconSize(QSize(24, 24));
     ui->endDate_3->setText(" End Date");
     ui->endDate_3->setFixedHeight(40);
-    setupRequestCards();
     setupWorkerCards();
 
     // Setup profile icon in profile
@@ -3332,11 +3329,11 @@ void Home::on_edit_edit_2_clicked()
     }
 
     // Find UI elements
-    QComboBox *taskCombo = editPage->findChild<QComboBox*>("comboBox");
-    QComboBox *statusCombo = editPage->findChild<QComboBox*>("comboBox_2");
-    QLineEdit *descriptionEdit = editPage->findChild<QLineEdit*>("description_2");
-    QDateTimeEdit *startDateEdit = editPage->findChild<QDateTimeEdit*>("startDate_2");
-    QDateTimeEdit *endDateEdit = editPage->findChild<QDateTimeEdit*>("endDate_2");
+    QComboBox *taskCombo = editPage->findChild<QComboBox*>("comboBox_edit");
+    QComboBox *statusCombo = editPage->findChild<QComboBox*>("comboBox_edit_2");
+    QLineEdit *descriptionEdit = editPage->findChild<QLineEdit*>("description_edit_2");
+    QDateTimeEdit *startDateEdit = editPage->findChild<QDateTimeEdit*>("startDate_edit_2");
+    QDateTimeEdit *endDateEdit = editPage->findChild<QDateTimeEdit*>("endDate_edit_2");
     QDateTimeEdit *preferredTimeSlotEdit = editPage->findChild<QDateTimeEdit*>("preferredTimeSlots");
 
     // Validate UI elements

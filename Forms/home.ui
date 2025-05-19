@@ -47,7 +47,7 @@ QFrame{
 }</string>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="requestsPage">
        <property name="cursor">
@@ -380,13 +380,6 @@ QFrame{
                     <property name="bottomMargin">
                      <number>0</number>
                     </property>
-                    <item>
-                     <widget class="QPushButton" name="filterName">
-                      <property name="text">
-                       <string>Filter by name</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item>
                      <widget class="QPushButton" name="startDate">
                       <property name="styleSheet">
@@ -854,13 +847,6 @@ QFrame{
                     <property name="bottomMargin">
                      <number>0</number>
                     </property>
-                    <item>
-                     <widget class="QPushButton" name="filterName_3">
-                      <property name="text">
-                       <string>Filter by name</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item>
                      <widget class="QPushButton" name="startDate_3">
                       <property name="styleSheet">

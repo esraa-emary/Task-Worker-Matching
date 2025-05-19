@@ -354,151 +354,6 @@ create index ASSIGNED_TO_FK on WORKER (
     )
     go
 
-/* views */
-
-/*==============================================================*/
-/* View: MatchingWorkersView                                    */
-/*==============================================================*/
-CREATE VIEW MatchingWorkersView AS
-SELECT r.RequestID, w.WorkerID, w.Name, w.Locations, w.AvailableSlots
-FROM Request r
-         JOIN Task t ON r.TaskID = t.TaskID
-         JOIN Specialty s ON t.TaskID = s.TaskID
-         JOIN Worker w ON s.WorkerID = w.WorkerID
-WHERE w.Locations LIKE '%' + r.Address + '%'
-  AND w.AvailableSlots >= r.PreferredTimeSlot;
-GO
-
-/*==============================================================*/
-/* View: WorkerTotalWageView                                    */
-/*==============================================================*/
-CREATE VIEW WorkerTotalWageView AS
-SELECT a.WorkerID, w.Name, SUM(a.Wage) AS TotalDueWage
-FROM Assignment a
-         JOIN Worker w ON a.WorkerID = w.WorkerID
-WHERE a.Status = 'Completed'
-GROUP BY a.WorkerID, w.Name;
-GO
-
-/*==============================================================*/
-/* View: TaskRequestCountView                                   */
-/*==============================================================*/
-CREATE VIEW TaskRequestCountView AS
-SELECT t.TaskID, t.TaskName, COUNT(r.RequestID) AS RequestCount
-FROM Task t
-         LEFT JOIN Request r ON t.TaskID = r.TaskID
-GROUP BY t.TaskID, t.TaskName;
-GO
-
-/*==============================================================*/
-/* View: WorkerAssignmentCountView                              */
-/*==============================================================*/
-CREATE VIEW WorkerAssignmentCountView AS
-SELECT w.WorkerID, w.Name, COUNT(a.RequestID) AS AssignmentCount
-FROM Worker w
-         LEFT JOIN Assignment a ON w.WorkerID = a.WorkerID
-GROUP BY w.WorkerID, w.Name;
-GO
-
-/*==============================================================*/
-/* View: SpecialtyBestWorkerView                                */
-/*==============================================================*/
-CREATE VIEW SpecialtyBestWorkerView AS
-SELECT s.TaskID, a.WorkerID, AVG(a.WorkerRating) AS AvgRating
-FROM Assignment a
-         JOIN Request r ON a.RequestID = r.RequestID
-         JOIN Specialty s ON a.WorkerID = s.WorkerID AND r.TaskID = s.TaskID
-GROUP BY s.TaskID, a.WorkerID;
-GO
-
-/*==============================================================*/
-/* View: FeaturedTasksView                                      */
-/*==============================================================*/
-CREATE VIEW FeaturedTasksView AS
-SELECT TOP 5 t.TaskID, t.TaskName, t.AvgFee, COUNT(r.RequestID) AS RequestCount
-FROM Task t
-         LEFT JOIN Request r ON t.TaskID = r.TaskID
-GROUP BY t.TaskID, t.TaskName, t.AvgFee
-ORDER BY RequestCount DESC;
-GO
-
-/*==============================================================*/
-/* View: AvailableWorkersView                                   */
-/*==============================================================*/
-CREATE VIEW AvailableWorkersView AS
-SELECT WorkerID, Name, Rating, Locations
-FROM Worker
-WHERE AvailableSlots >= GETDATE();
-GO
-
-/*==============================================================*/
-/* View: OfferedTasksView                                       */
-/*==============================================================*/
-CREATE VIEW OfferedTasksView AS
-SELECT TaskID, TaskName, AvgTimeToFinish, AvgFee
-FROM Task;
-GO
-
-/*==============================================================*/
-/* View: FeedbackView                                           */
-/*==============================================================*/
-CREATE VIEW FeedbackView AS
-SELECT a.RequestID, c.Name AS ClientName, w.Name AS WorkerName, a.FeedbackByClient, a.WorkerRating
-FROM Assignment a
-         JOIN Client c ON a.ClientID = c.ClientID
-         JOIN Worker w ON a.WorkerID = w.WorkerID;
-GO
-
-/*==============================================================*/
-/* View: WorkerOverallRatingView                                */
-/*==============================================================*/
-CREATE VIEW WorkerOverallRatingView AS
-SELECT w.WorkerID, w.Name, AVG(a.WorkerRating) AS OverallRating
-FROM Worker w
-         LEFT JOIN Assignment a ON w.WorkerID = a.WorkerID
-GROUP BY w.WorkerID, w.Name;
-GO
-
-/*==============================================================*/
-/* View: TopRatedWorkersView                                    */
-/*==============================================================*/
-CREATE VIEW TopRatedWorkersView AS
-SELECT w.WorkerID, w.Name
-FROM Worker w
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM Assignment a
-    WHERE a.WorkerID = w.WorkerID
-      AND (a.WorkerRating < 4.5 OR a.WorkerRating IS NULL)
-);
-GO
-
-/*==============================================================*/
-/* View: ClientRequestHistoryView                               */
-/*==============================================================*/
-CREATE VIEW ClientRequestHistoryView AS
-SELECT r.ClientID, r.RequestID, t.TaskName, r.RequestTime, a.Status, a.Wage 
-FROM Request r
-         JOIN Assignment a ON r.RequestID = a.RequestID
-         JOIN Task t ON r.TaskID = t.TaskID;
-GO
-
-/*==============================================================*/
-/* View: UnrequestedSpecialtiesView                             */
-/*==============================================================*/
-CREATE VIEW UnrequestedSpecialtiesView AS
-SELECT t.TaskID, t.TaskName
-FROM Task t
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM Request r
-    WHERE r.TaskID = t.TaskID
-              AND YEAR(r.RequestTime) = YEAR(GETDATE())
-    AND MONTH(r.RequestTime) = MONTH(GETDATE())
-);
-GO
-
-
 
 /* CRUD Procedures */
 
@@ -574,138 +429,10 @@ VALUES (@WorkerID, @Name, @SpecialtyNum, @Locations, @AvailableSlots, @Rating)
 END
 GO
 
-CREATE PROCEDURE UpdateWorker
-    @WorkerID INT,
-    @Name VARCHAR(100),
-    @SpecialtyNum INT,
-    @Locations VARCHAR(250),
-    @AvailableSlots DATETIME,
-    @Rating FLOAT
-AS
-BEGIN
-UPDATE WORKER
-SET NAME = @Name,
-    SPECIALTYNUM = @SpecialtyNum,
-    LOCATIONS = @Locations,
-    AVAILABLESLOTS = @AvailableSlots,
-    RATING = @Rating
-WHERE WORKERID = @WorkerID
-END
-GO
-
-CREATE PROCEDURE DeleteWorker
-    @WorkerID INT
-AS
-BEGIN
-DELETE FROM WORKER WHERE WORKERID = @WorkerID
-END
-GO
-
-CREATE PROCEDURE GetWorker
-    @WorkerID INT
-AS
-BEGIN
-SELECT * FROM WORKER WHERE WORKERID = @WorkerID
-END
-GO
-
 CREATE PROCEDURE GetAllWorkers
     AS
 BEGIN
 SELECT * FROM WORKER
-END
-GO
-
--- Task Procedures
-CREATE PROCEDURE CreateTask
-    @TaskID INT,
-    @TaskName VARCHAR(100),
-    @AvgTimeToFinish INT,
-    @AvgFee FLOAT
-AS
-BEGIN
-INSERT INTO TASK (TASKID, TASKNAME, AVGTIMETOFINISH, AVGFEE)
-VALUES (@TaskID, @TaskName, @AvgTimeToFinish, @AvgFee)
-END
-GO
-
-CREATE PROCEDURE UpdateTask
-    @TaskID INT,
-    @TaskName VARCHAR(100),
-    @AvgTimeToFinish INT,
-    @AvgFee FLOAT
-AS
-BEGIN
-UPDATE TASK
-SET TASKNAME = @TaskName,
-    AVGTIMETOFINISH = @AvgTimeToFinish,
-    AVGFEE = @AvgFee
-WHERE TASKID = @TaskID
-END
-GO
-
-CREATE PROCEDURE DeleteTask
-    @TaskID INT
-AS
-BEGIN
-DELETE FROM TASK WHERE TASKID = @TaskID
-END
-GO
-
-CREATE PROCEDURE GetTask
-    @TaskID INT
-AS
-BEGIN
-SELECT * FROM TASK WHERE TASKID = @TaskID
-END
-GO
-
-CREATE PROCEDURE GetAllTasks
-    AS
-BEGIN
-SELECT * FROM TASK
-END
-GO
-
--- Request Procedures
-CREATE OR ALTER PROCEDURE CreateRequest
-    @RequestID INT,
-    @ClientID INT,
-    @TaskID INT,
-    @Address VARCHAR(250),
-    @PreferredTimeSlot DATETIME,
-    @RequestDescription VARCHAR(250) = NULL
-AS
-BEGIN
-    IF EXISTS (SELECT 1 FROM CLIENT WHERE CLIENTID = @ClientID)
-    AND EXISTS (SELECT 1 FROM TASK WHERE TASKID = @TaskID)
-    BEGIN
-        INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION)
-        VALUES (@RequestID, @ClientID, @TaskID, @Address, GETDATE(), @PreferredTimeSlot, @RequestDescription)
-    END
-    ELSE
-        THROW 50001, 'Invalid ClientID or TaskID', 1
-END
-GO
-
-CREATE PROCEDURE UpdateRequest
-    @RequestID INT,
-    @ClientID INT,
-    @TaskID INT,
-    @Address VARCHAR(250),
-    @PreferredTimeSlot DATETIME,
-    @RequestTime DATETIME,
-    @RequestDescription VARCHAR(250)
-AS
-BEGIN
-UPDATE REQUEST
-SET CLIENTID = @ClientID,
-    TASKID = @TaskID,
-    ADDRESS = @Address,
-    PREFERREDTIMESLOT = @PreferredTimeSlot,
-    REQUESTTIME         = @RequestTime,
-    REQUESTDESCRIPTION  = @RequestDescription
-WHERE REQUESTID = @RequestID
 END
 GO
 
@@ -847,103 +574,6 @@ SELECT * FROM ASSIGNMENT
 END
 GO
 
--- Business Logic Procedures
-CREATE PROCEDURE MatchWorkersToRequest
-    @RequestID INT
-AS
-BEGIN
-SELECT w.WorkerID, w.Name, w.Locations, w.AvailableSlots
-FROM Worker w
-         JOIN Specialty s ON w.WorkerID = s.WorkerID
-         JOIN Request r ON s.TaskID = r.TaskID
-WHERE r.RequestID = @RequestID
-  AND w.Locations LIKE '%' + r.Address + '%'
-  AND w.AvailableSlots >= r.PreferredTimeSlot
-END
-GO
-
-CREATE PROCEDURE CalculateOverallRating
-    @WorkerID INT
-AS
-BEGIN
-SELECT AVG(WorkerRating) AS OverallRating
-FROM Assignment
-WHERE WorkerID = @WorkerID
-END
-GO
-
-CREATE PROCEDURE GetMatchingWorkersForRequest
-    @RequestID INT
-AS
-BEGIN
-SELECT
-    w.WorkerID,
-    w.Name,
-    w.Locations,
-    w.AvailableSlots,
-    t.TaskName AS RequiredSpecialty
-FROM Worker w
-         JOIN Specialty s ON w.WorkerID = s.WorkerID
-         JOIN Request r ON s.TaskID = r.TaskID
-         JOIN Task t ON r.TaskID = t.TaskID
-WHERE
-    r.RequestID = @RequestID
-  AND w.Locations LIKE '%' + r.Address + '%'
-  AND w.AvailableSlots >= r.PreferredTimeSlot
-ORDER BY w.Rating DESC;
-END
-GO
-
-CREATE PROCEDURE CalculateTotalDueWage
-    @StartDate DATETIME,
-    @EndDate DATETIME
-AS
-BEGIN
-SELECT
-    a.WorkerID,
-    w.Name,
-    SUM(a.Wage) AS TotalDueWage
-FROM Assignment a
-         JOIN Request r ON a.RequestID = r.RequestID
-         JOIN Worker w ON a.WorkerID = w.WorkerID
-WHERE
-    a.Status = 'Completed'
-  AND r.RequestTime BETWEEN @StartDate AND @EndDate
-  AND a.Wage IS NOT NULL
-GROUP BY a.WorkerID, w.Name;
-END
-GO
-
--- For Tasks
-CREATE PROCEDURE GetMostLeastRequestedTasks
-    AS
-BEGIN
-SELECT
-    t.TaskID,
-    t.TaskName,
-    COUNT(RequestID) AS RequestCount,
-    RANK() OVER (ORDER BY COUNT(RequestID) DESC) AS PopularityRank
-FROM Request r
-         JOIN Task t ON r.TaskID = t.TaskID
-GROUP BY t.TaskID, t.TaskName;
-END
-GO
-
--- For Workers
-CREATE PROCEDURE GetMostLeastActiveWorkers
-    AS
-BEGIN
-SELECT
-    w.WorkerID,
-    w.Name,
-    COUNT(a.RequestID) AS AssignmentCount,
-    RANK() OVER (ORDER BY COUNT(a.RequestID) DESC) AS ActivityRank
-FROM Worker w
-         LEFT JOIN Assignment a ON w.WorkerID = a.WorkerID
-GROUP BY w.WorkerID, w.Name;
-END
-GO
-
 -- For Specialties
 CREATE PROCEDURE GetMostLeastPopularSpecialties
     AS
@@ -989,51 +619,74 @@ WHERE Rank = 1;
 END
 GO
 
+-- CLIENTS
 INSERT INTO CLIENT (CLIENTID, NAME, PHONE, ADDRESS, EMAIL, OVERALLFEEDBACK, PASSWORD)
 VALUES
 (1, 'John Doe', '555-123-4567', '123 Main St, City', 'john.doe@email.com', 'Great client!', 'password123'),
-(2, 'Jane Smith', '555-987-6543', '456 Oak Ave, Town', 'jane.smith@email.com', NULL, 'securepass456');
+(2, 'Jane Smith', '555-987-6543', '456 Oak Ave, Town', 'jane.smith@email.com', 'Reliable and responsive', 'securepass456');
 
+-- TASKS
 INSERT INTO TASK (TASKID, TASKNAME, AVGTIMETOFINISH, AVGFEE)
 VALUES
-(1, 'Plumbing Repair', 120, 150.00), -- 120 minutes, $150 avg fee
-(2, 'Electrical Wiring', 180, 200.00); -- 180 minutes, $200 avg fee
+(1, 'Plumbing Repair', 120, 150.00),
+(2, 'Electrical Wiring', 180, 200.00),
+(3, 'HVAC Maintenance', 150, 180.00),
+(4, 'Roof Inspection', 90, 120.00),
+(5, 'Landscaping', 240, 220.00),
+(6, 'Painting', 200, 170.00);
 
+-- WORKERS
 INSERT INTO WORKER (WORKERID, REQUESTID, NAME, SPECIALTYNUM, LOCATIONS, AVAILABLESLOTS, RATING)
 VALUES
-(1, NULL, 'Mike Johnson', 2, 'City, Town', DATEADD(day, 1, GETDATE()), 4.5), -- Available tomorrow
-(2, NULL, 'Sarah Brown', 1, 'City', DATEADD(day, 2, GETDATE()), 4.0); -- Available in 2 days
+(1, NULL, 'Mike Johnson', 2, 'City, Town', DATEADD(day, 1, GETDATE()), 4.5),
+(2, NULL, 'Sarah Brown', 3, 'Town, Village', DATEADD(day, 2, GETDATE()), 4.2),
+(3, NULL, 'David Lee', 2, 'City, Hamlet', DATEADD(day, 3, GETDATE()), 4.8),
+(4, NULL, 'Emma Davis', 1, 'City', DATEADD(day, 4, GETDATE()), 4.1),
+(5, NULL, 'Chris Wilson', 2, 'Village, Town', DATEADD(day, 5, GETDATE()), 3.9),
+(6, NULL, 'Olivia Garcia', 2, 'Hamlet, City', DATEADD(day, 6, GETDATE()), 4.7);
 
+-- REQUESTS (1-12, so we can assign each to a unique combination)
 INSERT INTO REQUEST (REQUESTID, CLIENTID, TASKID, ADDRESS, REQUESTTIME, PREFERREDTIMESLOT, REQUESTDESCRIPTION)
 VALUES
-(1, 1, 1, '123 Main St, City', GETDATE(), DATEADD(day, 1, GETDATE()), 'Fix leaking faucet in kitchen'),
-(2, 2, 2, '456 Oak Ave, Town', DATEADD(hour, -2, GETDATE()), DATEADD(day, 2, GETDATE()), 'Install new ceiling fan in bedroom'),
-(3, 1, 2, '789 Pine Rd, Village', DATEADD(hour, -4, GETDATE()), DATEADD(day, 3, GETDATE()), 'Upgrade electrical panel in garage'),
-(4, 2, 1, '321 Elm St, Hamlet', GETDATE(), DATEADD(day, 4, GETDATE()), 'Repair burst pipe in bathroom'),
-(5, 1, 2, '654 Maple Ave, City', DATEADD(hour, -1, GETDATE()), DATEADD(day, 5, GETDATE()), 'Fix flickering lights in living room'),
-(6, 2, 1, '987 Cedar Ln, Town', DATEADD(hour, -3, GETDATE()), DATEADD(day, 6, GETDATE()), 'Replace water heater'),
-(7, 1, 2, '147 Birch St, Village', GETDATE(), DATEADD(day, 7, GETDATE()), 'Install outdoor lighting'),
-(8, 2, 1, '258 Oakwood Dr, Hamlet', DATEADD(hour, -5, GETDATE()), DATEADD(day, 8, GETDATE()), 'Fix clogged drain'),
-(9, 1, 2, '369 Willow Rd, City', DATEADD(hour, -6, GETDATE()), DATEADD(day, 9, GETDATE()), 'Repair circuit breaker'),
-(10, 2, 1, '741 Spruce Ave, Town', GETDATE(), DATEADD(day, 10, GETDATE()), 'Install new sink');
+(1, 1, 1, '123 Main St, City', GETDATE(), DATEADD(day, 1, GETDATE()), 'Fix faucet'),
+(2, 2, 2, '456 Oak Ave, Town', GETDATE(), DATEADD(day, 1, GETDATE()), 'Install ceiling fan'),
+(3, 1, 3, '789 Pine Rd, Village', GETDATE(), DATEADD(day, 2, GETDATE()), 'HVAC annual check'),
+(4, 2, 4, '321 Elm St, Hamlet', GETDATE(), DATEADD(day, 2, GETDATE()), 'Inspect roof leaks'),
+(5, 1, 5, '654 Maple Ave, City', GETDATE(), DATEADD(day, 3, GETDATE()), 'Backyard redesign'),
+(6, 2, 6, '987 Cedar Ln, Town', GETDATE(), DATEADD(day, 3, GETDATE()), 'Paint garage door'),
+(7, 1, 1, '741 Spruce Ave, Town', GETDATE(), DATEADD(day, 4, GETDATE()), 'Unclog kitchen drain'),
+(8, 2, 2, '369 Willow Rd, City', GETDATE(), DATEADD(day, 4, GETDATE()), 'Fix power outage'),
+(9, 1, 3, '147 Birch St, Village', GETDATE(), DATEADD(day, 5, GETDATE()), 'AC not cooling'),
+(10, 2, 4, '258 Oakwood Dr, Hamlet', GETDATE(), DATEADD(day, 5, GETDATE()), 'Loose roof tiles'),
+(11, 1, 5, '369 Cedar Rd, Town', GETDATE(), DATEADD(day, 6, GETDATE()), 'Tree planting'),
+(12, 2, 6, '159 Poplar Blvd, City', GETDATE(), DATEADD(day, 6, GETDATE()), 'Bedroom repainting');
 
+-- ASSIGNMENTS (all completed)
 INSERT INTO ASSIGNMENT (WORKERID, CLIENTID, REQUESTID, ACTUALTIMETAKEN, WORKERRATING, CLIENTRATING, STATUS, FEEDBACKBYCLIENT, FEEDBACKBYWORKER, WAGE)
 VALUES
-(1, 1, 1, 125, 4.7, 4.6, 'Completed', 'Excellent plumbing work!', 'Client was cooperative.', 155.00),
-(2, 2, 2, 175, NULL, NULL, 'In Progress', NULL, NULL, NULL),
-(2, 1, 3, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
-(1, 2, 4, 130, 4.4, 4.3, 'Completed', 'Quick and efficient!', 'Easy to work with.', 145.00),
-(2, 1, 5, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
-(1, 2, 6, 115, NULL, NULL, 'In Progress', NULL, NULL, NULL),
-(2, 1, 7, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
-(1, 2, 8, 140, 4.6, 4.5, 'Completed', 'Very professional!', 'Client provided clear instructions.', 160.00),
-(2, 1, 9, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL),
-(1, 2, 10, NULL, NULL, NULL, 'Pending', NULL, NULL, NULL);
+(1, 1, 1, 125, 4.7, 4.6, 'Completed', 'Great service!', 'Smooth experience.', 160.00),
+(2, 2, 2, 170, 4.2, 4.0, 'Completed', 'On time and quick.', 'Nice client.', 195.00),
+(3, 1, 3, 150, 4.9, 4.8, 'Completed', 'Efficient technician.', 'Client was helpful.', 185.00),
+(4, 2, 4, 95, 4.0, 4.2, 'Completed', 'Clear explanation.', 'Responsive client.', 130.00),
+(5, 1, 5, 230, 3.8, 3.9, 'Completed', 'Took longer than expected.', 'Cooperative client.', 210.00),
+(6, 2, 6, 190, 4.6, 4.7, 'Completed', 'Clean and detailed.', 'Nice project.', 175.00),
+(1, 1, 7, 110, 4.5, 4.4, 'Completed', 'Solved quickly.', 'Polite and clear.', 150.00),
+(2, 2, 8, 160, 4.1, 4.0, 'Completed', 'Fixed in no time.', 'Thankful user.', 180.00),
+(3, 1, 9, 145, 5.0, 4.9, 'Completed', 'Excellent diagnosis.', 'Great client.', 190.00),
+(4, 2, 10, 100, 4.3, 4.2, 'Completed', 'Identified problem fast.', 'Communicative client.', 140.00),
+(5, 1, 11, 250, 4.0, 4.1, 'Completed', 'Good landscaping.', 'Patient and friendly.', 220.00),
+(6, 2, 12, 190, 4.8, 4.9, 'Completed', 'Clean paint job.', 'Detailed instructions.', 180.00);
 
+-- SPECIALTIES (each worker has at least 2 tasks)
 INSERT INTO SPECIALTY (WORKERID, TASKID)
 VALUES
-(1, 1),
-(2, 2);
+(1, 1), (1, 5),
+(2, 2), (2, 6),
+(3, 3), (3, 1),
+(4, 4), (4, 6),
+(5, 5), (5, 2),
+(6, 6), (6, 3);
+
 SELECT * FROM CLIENT;
 SELECT * FROM TASK;
 SELECT * FROM WORKER;

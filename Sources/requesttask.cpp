@@ -159,5 +159,6 @@ void RequestTask::on_add_clicked()
     }
 
     QMessageBox::information(this, "Success", "Request and assignment added successfully!");
+    emit backToHome();
     this->close();
 }
