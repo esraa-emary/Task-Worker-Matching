@@ -2038,7 +2038,6 @@ void Home::goToRequestPage(int taskId,QString taskName){
         this->show();
         this->loadAllRequests();
     });
-    this->hide();
 }
 
 QFrame* Home::createTaskCard(int &taskId, QString &taskName, QString &workersName,int &timeFinish, float &fee){
