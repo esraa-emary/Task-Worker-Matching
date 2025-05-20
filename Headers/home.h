@@ -114,15 +114,10 @@ private slots:
     void on_statisticBtn_6_clicked();
     void on_statisticBtn_7_clicked();
     void on_statisticBtn_8_clicked();
-
     void on_deleteRequest_clicked();
-
     void on_editRequest_clicked();
-
     void on_comboBox_2_currentTextChanged(const QString &arg1);
-
     void on_cancel_edit_clicked();
-
     void on_edit_edit_2_clicked();
 
 private:
@@ -179,7 +174,7 @@ private:
 
     // for tasks page
     void loadAllTasks();
-    QFrame* createTaskCard(int &taskId, QString &taskName, QString &workersName,int &timeFinish, float &fee);
+    QFrame* createTaskCard(int &taskId, QString &taskName,int &timeFinish, float &fee);
     void goToRequestPage(int taskId,QString taskName);
 
     // for statistics page

@@ -2040,7 +2040,7 @@ void Home::goToRequestPage(int taskId,QString taskName){
     });
 }
 
-QFrame* Home::createTaskCard(int &taskId, QString &taskName, QString &workersName,int &timeFinish, float &fee){
+QFrame* Home::createTaskCard(int &taskId, QString &taskName,int &timeFinish, float &fee){
     QFrame *card = new QFrame();
     card->setObjectName(QString("taskCard_%1").arg(taskId));
     card->setFrameShape(QFrame::StyledPanel);
@@ -2104,23 +2104,9 @@ QFrame* Home::createTaskCard(int &taskId, QString &taskName, QString &workersNam
         "}"
         );
 
-    QLabel *workerLabel;
-    workerLabel = new QLabel(QString("Workers: %1").arg(workersName),card);
-    workerLabel->setStyleSheet(
-        "QLabel {"
-        "   font-weight: bold;"
-        "   font-size: 20px;"
-        "   color: #E38B29;"
-        "   border: none;"
-        "   margin: 0px;"
-        "   padding: 0px;"
-        "}"
-        );
-
     cardLayout->addWidget(taskLabel);
     cardLayout->addWidget(timeFinishLabel);
     cardLayout->addWidget(feeLabel);
-    cardLayout->addWidget(workerLabel);
 
     card->setFixedHeight(150);
     card->setProperty("taskId", taskId);
@@ -2192,9 +2178,8 @@ void Home::loadAllTasks() {
     cardsLayout->setSpacing(15);
 
     QSqlQuery query;
-    query.prepare("select WORKER.NAME, TASK.TASKNAME,AVGTIMETOFINISH,AVGFEE,TASK.TASKID "
-                    "from TASK,WORKER,SPECIALTY "
-                    "where SPECIALTY.TASKID = TASK.TASKID and SPECIALTY.WORKERID = WORKER.WORKERID "
+    query.prepare("select TASK.TASKNAME,AVGTIMETOFINISH,AVGFEE,TASK.TASKID "
+                    "from TASK "
                     "order by TASK.TASKID");
 
     if (!query.exec()) {
@@ -2209,11 +2194,10 @@ void Home::loadAllTasks() {
     while (query.next()) {
         int taskId = query.value("TASK.TASKID").toInt();
         QString taskName = query.value("TASK.TASKNAME").toString();
-        QString workersName = query.value("WORKER.NAME").toString();
         int timeFinish = query.value("AVGTIMETOFINISH").toInt();
         float fee = query.value("AVGFEE").toFloat();
 
-        QFrame *card = createTaskCard(taskId, taskName, workersName, timeFinish,fee);
+        QFrame *card = createTaskCard(taskId, taskName, timeFinish,fee);
         cardsLayout->addWidget(card);
     }
 
@@ -2399,7 +2383,7 @@ void Home::loadAllstatistics(){
         cardLayout->addLayout(leftGroupLayout);
         cardLayout->addWidget(taskLabel);
 
-        card->setFixedHeight(120);
+        card->setFixedHeight(200);
         cardsLayout->addWidget(card);
     }
 
@@ -2495,7 +2479,7 @@ void Home::loadAllstatistics(){
         cardLayout->addLayout(leftGroupLayout);
         cardLayout->addWidget(taskLabel);
 
-        card2->setFixedHeight(120);
+        card2->setFixedHeight(200);
         cardsLayout->addWidget(card2);
     }
 
@@ -3237,7 +3221,7 @@ void Home::on_editRequest_clicked()
     ui->stackedWidget_2->setCurrentWidget(editPage);
 
     // Find UI elements
-    QComboBox *taskCombo = editPage->findChild<QComboBox*>("comboBox_edit_2");
+    QComboBox *taskCombo = editPage->findChild<QComboBox*>("comboBox_edit");
     QLineEdit *descriptionEdit = editPage->findChild<QLineEdit*>("description_edit_2");
     QDateTimeEdit *startDateEdit = editPage->findChild<QDateTimeEdit*>("startDate_edit_2");
     QDateTimeEdit *endDateEdit = editPage->findChild<QDateTimeEdit*>("endDate_edit_2");
@@ -3250,9 +3234,12 @@ void Home::on_editRequest_clicked()
         return;
     }
 
+    // Clear and repopulate taskCombo
+    taskCombo->clear();
+
     // Populate comboBox_2 with TASKNAME values if not already populated
     if (taskCombo->count() == 0) {
-        QSqlQuery taskQuery("SELECT TASKNAME FROM TASK ORDER BY TASKNAME");
+        QSqlQuery taskQuery("SELECT TASKNAME FROM TASK ORDER BY TASKId");
         while (taskQuery.next()) {
             taskCombo->addItem(taskQuery.value("TASKNAME").toString());
         }
@@ -3296,7 +3283,6 @@ void Home::on_editRequest_clicked()
     startDateEdit->setDateTime(startDate);
     endDateEdit->setDateTime(endDate);
 }
-
 
 void Home::on_comboBox_2_currentTextChanged(const QString &arg1)
 {
