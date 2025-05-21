@@ -26,7 +26,22 @@ void Home::setClient(int &id,QString &name,QString &password,QString &address,QS
     ui->pushButton_6->setText(clientData.name);
     ui->pushButton_7->setText(clientData.name);
     setupRequestCards();
+
+    QSqlQuery query;
+    query.prepare("SELECT taskName FROM task");
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        QMessageBox::critical(this, "Database Error",
+                              "Could not fetch tasks: " + query.lastError().text());
+        return;
+    }
+
+    while (query.next()) {
+        QString task = query.value("taskName").toString();
+        ui->comboBox_edit->addItem(task);
+    }
 }
+
 bool Home::connectToDatabase()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
@@ -52,23 +67,8 @@ bool Home::connectToDatabase()
 
     qDebug() << "Connected to database successfully";
     qDebug() << "System timezone:" << QTimeZone::systemTimeZoneId();
-    QSqlQuery query;
-    query.prepare("SELECT taskName FROM task");
-    if (!query.exec()) {
-        qDebug() << "Error executing query:" << query.lastError().text();
-        QMessageBox::critical(this, "Database Error",
-                              "Could not fetch tasks: " + query.lastError().text());
-        return false;
-    }
-
-    while (query.next()) {
-        QString task = query.value("taskName").toString();
-        ui->comboBox_edit->addItem(task);
-    }
     return true;
 }
-
-
 
 void Home::loadAllRequests()
 {
