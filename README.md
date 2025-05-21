@@ -115,9 +115,9 @@ A desktop application that helps clients find and connect with suitable workers 
 
 ## 📬 Contact
 - Esraa Emary Abd El-Salam: [GitHub](https://github.com/esraa-emary) - [LinkedIn](https://www.linkedin.com/in/esraa-emary-b372b8303/)
-- Adel ahmed Mohamed el hefny: [GitHub](https://github.com/AdelHefny) - [LinkedIn]()
-- Mahmoud Abdelaziz: [GitHub](https://github.com/Mahmoudabdelaziz-2004) - [LinkedIn]()
-- Marwan Husseine: [GitHub](https://github.com/Marwan-Hussein) - [LinkedIn](https://www.linkedin.com/in/marawan-hussein-568373314?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
+- Adel ahmed Mohamed el hefny: [GitHub](https://github.com/AdelHefny) - [LinkedIn](https://www.linkedin.com/in/adel-hefny-75b6601bb?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
+- Mahmoud Abdelaziz: [GitHub](https://github.com/Mahmoudabdelaziz-2004) - [LinkedIn](https://www.linkedin.com/in/mahmoud-abdelaziz-240012347?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
+- Marwan Hussein: [GitHub](https://github.com/Marwan-Hussein) - [LinkedIn](https://www.linkedin.com/in/marawan-hussein-568373314?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
 - Andrew Wafae: [GitHub](https://github.com/20230069-Andrew) - [LinkedIn]()
 
 ## 📜 License
