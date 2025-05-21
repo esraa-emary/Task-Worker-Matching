@@ -20,7 +20,6 @@ A desktop application that helps clients find and connect with suitable workers 
   - Phone number
   - Address
   - Email address
-  - Payment information
 - Track overall feedback from workers about each client
 
 ### 🛠️ Task Management
@@ -53,7 +52,7 @@ A desktop application that helps clients find and connect with suitable workers 
 ## 🖥️ Tech Stack
 
 - **GUI Framework**: Qt (C++)
-- **Database**: SQL (e.g., SQLite or MySQL)
+- **Database**: SQL 
 - **Language**: C++
 
 ## 📌 Goals
@@ -63,9 +62,56 @@ A desktop application that helps clients find and connect with suitable workers 
 - Efficient tracking of ratings and feedback
 - Structured data storage with a relational SQL database
 
-## 🏗️ How to Run (Coming Soon)
+## 🏗️ How to Run
 
-> Instructions for building and running the application will be added once development is underway.
+### 👤 Account Management
+- If the client **does not have an account**, they can go to the **Signup** page and create one.
+- If the client **already has an account**, they can go to the **Login** page and enter their credentials to sign in.
+
+---
+
+### 📄 Available Pages
+
+#### 🧑‍🔧 Workers
+- Displays a list of **available workers**, including:
+  - Their **overall rating**
+  - Their **specialties**
+- When clicking on any worker, a window appears showing **all clients that the worker has worked with**.
+
+#### 🛠️ Specialties
+- Displays all **specialties** in the application.
+- Shows the **best and worst worker** in each task based on **overall ratings**.
+
+#### 📋 Tasks
+- Displays a list of **available tasks** along with task **details**.
+- When clicking on any task, you are forwarded to the **Add Request** page where you can:
+  - **Add a new request** in this task
+  - **Choose a worker**
+  - **Select preferred time slots**
+  - **Add an optional description**
+
+#### 📨 Requests
+- Displays all of the client's **requests** with their current **status**: 
+  - `Pending`
+  - `In Progress`
+  - `Completed`
+- When clicking on any request, you can:
+  - **Edit** the request
+  - **Delete** the request
+  - **Mark it as completed**
+    - Once marked as completed, a window appears allowing the client to **rate the worker** and **write optional feedback**
+
+#### 🙍‍♂️ Profile
+- Displays the **client's information**
+- Allows the client to:
+  - **Edit** their profile
+  - **Delete** their account
+  - Navigate to the **Requests** page that shows:
+    - All **workers** who have worked with the client
+    - Their **feedback** and **ratings**
+
+---
+
 
 ## 📬 Contact
 - Esraa Emary Abd El-Salam: [GitHub](https://github.com/esraa-emary) - [LinkedIn](https://www.linkedin.com/in/esraa-emary-b372b8303/)
